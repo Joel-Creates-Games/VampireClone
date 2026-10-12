@@ -1,0 +1,23 @@
+# Unreal Engine Core Folders
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Visual Studio / VS Code
+.vs/
+.vscode/
+*.sln
+*.suo
+*.opendb
+*.db
+*.sdf
+*.opensdf
+
+# JetBrains Rider (A lot of UE5 devs use this)
+.idea/
+*.sln.DotSettings.user
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
