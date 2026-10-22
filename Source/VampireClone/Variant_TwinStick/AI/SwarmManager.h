@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/HierarchicalInstancedStaticMeshComponent.h"
+#include "ExpDrops.h"
 #include "SwarmManager.generated.h"
 
 UCLASS()
@@ -17,6 +19,12 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "References")
 	APawn* CachedPlayerPawn = nullptr;
+	UPROPERTY(VisibleAnywhere, Category = "References")
+	AExpDrops* CachedExpDrops = nullptr;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UHierarchicalInstancedStaticMeshComponent* HISMComponent;
+
+
 
 	UPROPERTY(EditAnywhere, Category = "Enemy Settings")
 	int BaseSpeed = 100;
@@ -24,17 +32,21 @@ public:
 	int BaseDamage = 10;
 	UPROPERTY(EditAnywhere, Category = "Enemy Settings")
 	int BaseHealth = 10;
+	UPROPERTY(EditAnywhere, Category = "Enemy Settings")
+	float SpawnTime = 2.0f;
 
 private:
 	TArray<int> _deadEnemies;
-	static const int _enemyCount = 10000;
+	static const int _enemyCount = 10;
 	FVector _EnemyDirection[_enemyCount];
 	FVector _EnemyPosition[_enemyCount];
 	FVector _EnemyVelocity[_enemyCount];
 	float _speed[_enemyCount];
-	int _damage[_enemyCount];
-	int _health[_enemyCount];
+	float _damage[_enemyCount];
+	float _health[_enemyCount];
 	bool _isAlive[_enemyCount];
+
+	float _spawnTimer = 0.0f;
 
 
 
@@ -42,19 +54,21 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	void Setup();
-	void ControlEnemy(float DeltaTime);
 
-	FVector SetDirection(const FVector& PlayerPos, const int Enemy);
-	FVector SetVelocity(const int Enemy);
-	FVector SetPosition(const int Enemy, float DeltaTime);
+	//in the tick function, we will control the enemies, moving them towards the player and checking for collisions
+	void ControlEnemy(float DeltaTime);
+	void DrawEnemyMesh();
 
 	int GetNextDeadEnemy();
 	
 	void KillEnemy(const int Enemy);
-	void TakeDamage(const int Enemy, const int Damage);
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	FVector SetSpawnLocation();
+	FVector GetEnemyPosition(const int EnemyIndex);
+	int GetClostestEnemyIndex(const FVector& Location);
+	void TakeDamage(const int Enemy, const float Damage);
 	void SpawnEnemy(const FVector& SpawnLocation);
 };

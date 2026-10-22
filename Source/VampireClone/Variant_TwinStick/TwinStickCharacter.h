@@ -20,6 +20,9 @@ class ATwinStickProjectile;
  *  Automatically rotates to face the aim direction.
  *  Fires projectiles and spawns AoE attacks.
  */
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChangedSigniture, float, CurrentHealth, float, MaxHealth);
+
 UCLASS(abstract)
 class ATwinStickCharacter : public ACharacter
 {
@@ -120,6 +123,23 @@ protected:
 	/** Timer to handle stick autofire */
 	FTimerHandle AutoFireTimer;
 
+	UPROPERTY(EditAnywhere, Category = "Magic Wand")
+	float wandAttackSpeed = 2.0f;
+	float wandCurrentSpeed = 0.0f;
+
+	class ASwarmManager* CachedSwarmManager = nullptr;
+	class AMagicWandController* CachedWandController = nullptr;
+	class AExpDrops* CachedExpDrop = nullptr;
+
+	float _totalExperience = 0.0f;
+	float _levelUpExp = 10.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats")
+	float MaxHealth = 100.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats")
+	float Health = 100.0f;
+
 public:
 	
 	/** Constructor */
@@ -164,6 +184,20 @@ protected:
 	/** Performs an AoE Attack */
 	void AoEAttack(const FInputActionValue& Value);
 
+	void MagicWand(float DeltaTime);
+
+public:
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnHealthChangedSigniture OnHealthChanged;
+
+	UFUNCTION()
+	void TwinStickTakeDamage(float Damage);
+
+	UFUNCTION()
+	void TwinStickGainExperience(float exp);
+
+
 public:
 
 	/** Handles move inputs from both input actions and touch interface */
@@ -197,10 +231,13 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, Category="Damage", meta = (DisplayName = "Damaged"))
 	void BP_Damaged();
 
+
 public:
 
 	/** Gives the player a pickup item */
 	void AddPickup();
+	void AddExperience(float Experience);
+	void CheckCollisions();
 
 protected:
 

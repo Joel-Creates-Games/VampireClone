@@ -10,9 +10,15 @@
 #include "TwinStickGameMode.h"
 #include "TwinStickAoEAttack.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h"
 #include "TwinStickProjectile.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
+#include "SwarmManager.h"
+#include "MagicWandController.h"
+#include "ExpDrops.h"
+#include "CombatMessageSubsystem.h"
+#include "ProgressionMessageSubsystem.h"
 
 ATwinStickCharacter::ATwinStickCharacter()
 {
@@ -49,9 +55,34 @@ ATwinStickCharacter::ATwinStickCharacter()
 void ATwinStickCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	// update the items count
 	UpdateItems();
+	AActor* FoundActor = UGameplayStatics::GetActorOfClass(GetWorld(), ASwarmManager::StaticClass());
+	CachedSwarmManager = Cast<ASwarmManager>(FoundActor);
+	AActor* FoundMagicWandController = UGameplayStatics::GetActorOfClass(GetWorld(), AMagicWandController::StaticClass());
+	CachedWandController = Cast<AMagicWandController>(FoundMagicWandController);
+	AActor* FoundExpDrops = UGameplayStatics::GetActorOfClass(GetWorld(), AExpDrops::StaticClass());
+	CachedExpDrop = Cast<AExpDrops>(FoundExpDrops);
+	UCombatMessageSubsystem* CombatRadio = GetWorld()->GetSubsystem<UCombatMessageSubsystem>();
+	if (CombatRadio) {
+		CombatRadio->OnPlayerHit.AddDynamic(this, &ATwinStickCharacter::TwinStickTakeDamage);
+	}
+	UProgressionMessageSubsystem* ProgressionRadio = GetWorld()->GetSubsystem<UProgressionMessageSubsystem>();
+	if (ProgressionRadio) {
+		ProgressionRadio->OnExperienceGain.AddDynamic(this, &ATwinStickCharacter::TwinStickGainExperience);
+	}
+	if (!CachedSwarmManager) {
+		UE_LOG(LogTemp, Warning, TEXT("SwarmManager not found in the world!"));
+	}
+	if (!CachedWandController) {
+		UE_LOG(LogTemp, Warning, TEXT("MagicWandController not found in the world!"));
+	}
+	if (!CachedExpDrop) {
+		UE_LOG(LogTemp, Warning, TEXT("ExpDrops not found in the world!"));
+	}
+
+	Health = MaxHealth;
 }
 
 void ATwinStickCharacter::EndPlay(EEndPlayReason::Type EndPlayReason)
@@ -107,6 +138,9 @@ void ATwinStickCharacter::Tick(float DeltaTime)
 
 		SetActorRotation(TargetRot);
 	}
+
+	MagicWand(DeltaTime);
+	CheckCollisions();
 }
 
 void ATwinStickCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -120,9 +154,9 @@ void ATwinStickCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ATwinStickCharacter::Move);
 		EnhancedInputComponent->BindAction(StickAimAction, ETriggerEvent::Triggered, this, &ATwinStickCharacter::StickAim);
 		EnhancedInputComponent->BindAction(MouseAimAction, ETriggerEvent::Triggered, this, &ATwinStickCharacter::MouseAim);
-		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &ATwinStickCharacter::Dash);
-		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Triggered, this, &ATwinStickCharacter::Shoot);
-		EnhancedInputComponent->BindAction(AoEAction, ETriggerEvent::Triggered, this, &ATwinStickCharacter::AoEAttack);
+		//EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &ATwinStickCharacter::Dash);
+		//EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Triggered, this, &ATwinStickCharacter::Shoot);
+		//EnhancedInputComponent->BindAction(AoEAction, ETriggerEvent::Triggered, this, &ATwinStickCharacter::AoEAttack);
 
 	}
 
@@ -174,6 +208,41 @@ void ATwinStickCharacter::AoEAttack(const FInputActionValue& Value)
 {
 	// route the input
 	DoAoEAttack();
+}
+
+void ATwinStickCharacter::MagicWand(float DeltaTime)
+{
+	wandCurrentSpeed += DeltaTime;
+	if (wandCurrentSpeed > wandAttackSpeed) {
+		wandCurrentSpeed = 0;
+		int closest = CachedSwarmManager->GetClostestEnemyIndex(GetActorLocation());
+		if (closest == -1) { return; }
+		FVector closestEnemyLocation = CachedSwarmManager->GetEnemyPosition(closest);
+		FVector direction = closestEnemyLocation - GetActorLocation();
+		direction.Normalize();
+		CachedWandController->SpawnProjectile(GetActorLocation(), direction);
+	}
+}
+
+void ATwinStickCharacter::TwinStickTakeDamage(float Damage)
+{
+	Health = FMath::Max(0, Health - Damage);
+	OnHealthChanged.Broadcast(Health, MaxHealth);
+
+	if (Health <= 0.0f) {
+		UE_LOG(LogTemp, Warning, TEXT("Player Died!"));
+	}
+}
+
+void ATwinStickCharacter::TwinStickGainExperience(float exp)
+{
+	_totalExperience = FMath::Min(_levelUpExp, _totalExperience + exp);
+	if (_totalExperience >= _levelUpExp) {
+		_totalExperience = 0;
+		_levelUpExp *= 1.5f;
+		UE_LOG(LogTemp, Warning, TEXT("Player Levelled!"));
+	}
+
 }
 
 void ATwinStickCharacter::DoMove(float AxisX, float AxisY)
@@ -295,6 +364,16 @@ void ATwinStickCharacter::AddPickup()
 
 	// update the items counter
 	UpdateItems();
+}
+
+void ATwinStickCharacter::AddExperience(float Experience)
+{
+	_totalExperience += Experience;
+}
+
+void ATwinStickCharacter::CheckCollisions()
+{
+	_totalExperience += CachedExpDrop->CheckPlayerCollision();
 }
 
 void ATwinStickCharacter::UpdateItems()
