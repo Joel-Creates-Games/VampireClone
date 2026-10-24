@@ -35,6 +35,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Enemy Settings")
 	float SpawnTime = 2.0f;
 
+	float SpawnSpeedup = 15.0f;
+
 private:
 	TArray<int> _deadEnemies;
 	static const int _enemyCount = 10;
@@ -47,7 +49,7 @@ private:
 	bool _isAlive[_enemyCount];
 
 	float _spawnTimer = 0.0f;
-
+	float _spawnSpeedUpTimer = 0.0f;
 
 
 protected:

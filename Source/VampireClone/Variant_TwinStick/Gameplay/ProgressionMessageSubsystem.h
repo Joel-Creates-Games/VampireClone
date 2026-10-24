@@ -7,6 +7,8 @@
 #include "ProgressionMessageSubsystem.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnExperienceGain, float, GainAmount);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelUp, float, Level);
+
 
 UCLASS()
 class UProgressionMessageSubsystem : public UWorldSubsystem
@@ -15,5 +17,6 @@ class UProgressionMessageSubsystem : public UWorldSubsystem
 
 public:
 	FOnExperienceGain OnExperienceGain;
-	
+
+	FOnLevelUp OnLevelUp;
 };

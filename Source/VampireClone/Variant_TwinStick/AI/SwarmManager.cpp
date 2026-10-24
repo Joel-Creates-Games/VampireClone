@@ -133,10 +133,15 @@ void ASwarmManager::Tick(float DeltaTime)
 	ControlEnemy(DeltaTime);
 	DrawEnemyMesh();
 	_spawnTimer += DeltaTime;
+	_spawnSpeedUpTimer += DeltaTime;
 	if (_spawnTimer >= SpawnTime) {
 		SpawnEnemy(SetSpawnLocation());
 		_spawnTimer = 0.0f;
 		if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("spawned")));
+	}
+	if (_spawnSpeedUpTimer >= SpawnSpeedup) {
+		_spawnTimer = FMath::Max(0.3f, _spawnTimer - 0.1f);
+		SpawnSpeedup = 0;
 	}
 }
 

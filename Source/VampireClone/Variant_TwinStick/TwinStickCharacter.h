@@ -21,7 +21,9 @@ class ATwinStickProjectile;
  *  Fires projectiles and spawns AoE attacks.
  */
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelUpSigniture, int, NewLevel);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChangedSigniture, float, CurrentHealth, float, MaxHealth);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnExpChangedSigniture, float, TotalExperience, float, MaxExperience);
 
 UCLASS(abstract)
 class ATwinStickCharacter : public ACharacter
@@ -131,8 +133,13 @@ protected:
 	class AMagicWandController* CachedWandController = nullptr;
 	class AExpDrops* CachedExpDrop = nullptr;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats")
 	float _totalExperience = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats")
 	float _levelUpExp = 10.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats")
+	int _level = 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats")
 	float MaxHealth = 100.0f;
@@ -190,6 +197,12 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnHealthChangedSigniture OnHealthChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnExpChangedSigniture OnExpChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnLevelUpSigniture OnLevelUp;
 
 	UFUNCTION()
 	void TwinStickTakeDamage(float Damage);

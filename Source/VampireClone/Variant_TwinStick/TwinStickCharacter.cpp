@@ -16,7 +16,6 @@
 #include "TimerManager.h"
 #include "SwarmManager.h"
 #include "MagicWandController.h"
-#include "ExpDrops.h"
 #include "CombatMessageSubsystem.h"
 #include "ProgressionMessageSubsystem.h"
 
@@ -241,8 +240,10 @@ void ATwinStickCharacter::TwinStickGainExperience(float exp)
 		_totalExperience = 0;
 		_levelUpExp *= 1.5f;
 		UE_LOG(LogTemp, Warning, TEXT("Player Levelled!"));
+		_level++;
+		OnLevelUp.Broadcast(_level);
 	}
-
+	OnExpChanged.Broadcast(_totalExperience, _levelUpExp);
 }
 
 void ATwinStickCharacter::DoMove(float AxisX, float AxisY)
