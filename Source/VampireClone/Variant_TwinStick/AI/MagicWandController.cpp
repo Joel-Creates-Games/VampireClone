@@ -3,7 +3,7 @@
 
 #include "Variant_TwinStick/AI/MagicWandController.h"
 #include <Kismet/GameplayStatics.h>
-#include "SwarmManager.h"
+#include "CombatMessageSubsystem.h"
 
 // Sets default values
 AMagicWandController::AMagicWandController()
@@ -24,9 +24,11 @@ void AMagicWandController::BeginPlay()
 
 void AMagicWandController::Setup()
 {
-	AActor* swarmInstance = Cast<ASwarmManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ASwarmManager::StaticClass()));
-	_SwarmManager = Cast<ASwarmManager>(swarmInstance);
-	if(!_SwarmManager) { return; }
+	//AActor* swarmInstance = Cast<ASwarmManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ASwarmManager::StaticClass()));
+	//_SwarmManager = Cast<ASwarmManager>(swarmInstance);
+	//if(!_SwarmManager) { return; }
+	_CombatRadio = GetWorld()->GetSubsystem<UCombatMessageSubsystem>();
+
 	_deadProjectiles.Reserve(_projectileCount);
 
 	FTransform HiddenTransform;
@@ -105,14 +107,30 @@ void AMagicWandController::CheckEnemyCollision()
 	for (int i = 0; i < _projectileCount; i++)
 	{
 		if (!_alive[i]) { continue; }
-		int closestEnemyIndex = _SwarmManager->GetClostestEnemyIndex(_ProjectilePosition[i]);
+		int closestEnemyIndex = _CombatRadio->GetClosestSwarm(_ProjectilePosition[i]);
 		if (closestEnemyIndex == -1) { continue; }
-		FVector enemyPos = _SwarmManager->GetEnemyPosition(closestEnemyIndex);
-		float distance = FVector::DistSquared(_ProjectilePosition[i], enemyPos);
+		FVector* enemyPos = _CombatRadio->GetSwarmEnemyPosition(closestEnemyIndex);
+		float distance = FVector::DistSquared(_ProjectilePosition[i], *enemyPos);
 		if (distance < 15625.0f) {
 			KillProjectile(i);
-			_SwarmManager->TakeDamage(closestEnemyIndex, baseDamage * _baseDamageModifier);
+			_CombatRadio->SwarmTakeDamage(closestEnemyIndex, baseDamage * _baseDamageModifier);
 		}
+	}
+}
+
+void AMagicWandController::MagicWand(float DeltaTime)
+{
+	wandCurrentSpeed += DeltaTime;
+	if (wandCurrentSpeed > wandAttackSpeed) {
+		FVector* playPos = _CombatRadio->GetPlayerPosition();
+		if (!playPos) { return; }
+		wandCurrentSpeed = 0;
+		int closest = _CombatRadio->GetClosestSwarm(*playPos);
+		if (closest == -1) { return; }
+		FVector* closestEnemyLocation = _CombatRadio->GetSwarmEnemyPosition(closest);
+		FVector direction = *closestEnemyLocation - *playPos;
+		direction.Normalize();
+		SpawnProjectile(*playPos, direction);
 	}
 }
 
@@ -123,6 +141,7 @@ void AMagicWandController::Tick(float DeltaTime)
 	MoveProjectiles(DeltaTime);
 	DrawProjectileMesh();
 	CheckEnemyCollision();
+	MagicWand(DeltaTime);
 }
 
 int AMagicWandController::GetNextProjectile()

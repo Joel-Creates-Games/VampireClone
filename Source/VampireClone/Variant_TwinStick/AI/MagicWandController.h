@@ -38,9 +38,12 @@ protected:
 	void DrawProjectileMesh();
 	void KillProjectile(const int Projectile);
 	void CheckEnemyCollision();
+	void MagicWand(float DeltaTime);
 
 protected:
-	class ASwarmManager* _SwarmManager = nullptr;
+	//class ASwarmManager* _SwarmManager = nullptr;
+
+	class UCombatMessageSubsystem* _CombatRadio = nullptr;
 
 	TArray<int> _deadProjectiles;
 	FVector _ProjectileDirection[_projectileCount];
@@ -52,6 +55,10 @@ protected:
 
 	float _baseSpeedModifier = 1.0f;
 	float _baseDamageModifier = 10.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Magic Wand")
+	float wandAttackSpeed = 2.0f;
+	float wandCurrentSpeed = 0.0f;
 
 public:	
 	// Called every frame

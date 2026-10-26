@@ -2,9 +2,9 @@
 
 
 #include "SwarmManager.h"
-#include "ExpDrops.h"
 #include <Kismet/GameplayStatics.h>
 #include "CombatMessageSubsystem.h"
+#include "ProgressionMessageSubsystem.h"
 
 // Sets default values
 ASwarmManager::ASwarmManager()
@@ -30,13 +30,18 @@ void ASwarmManager::Setup()
 {
 	UWorld* world = GetWorld();
 	if (!ensure(world)) return;
-	APlayerController* playerController = world->GetFirstPlayerController();
-	if (!ensure(playerController)) return;
-	CachedPlayerPawn = playerController->GetPawn();
-	if (!ensure(CachedPlayerPawn)) return;
-	AActor* expInstance = Cast<AExpDrops>(UGameplayStatics::GetActorOfClass(GetWorld(), AExpDrops::StaticClass()));
-	CachedExpDrops = Cast<AExpDrops>(expInstance);
-	if (!ensure(CachedExpDrops)) return;
+	//APlayerController* playerController = world->GetFirstPlayerController();
+	//if (!ensure(playerController)) return;
+	//CachedPlayerPawn = playerController->GetPawn();
+	//if (!ensure(CachedPlayerPawn)) return;
+	ProgressRadio = GetWorld()->GetSubsystem<UProgressionMessageSubsystem>();
+	if (ProgressRadio) {
+
+	}
+	CombatRadio = GetWorld()->GetSubsystem<UCombatMessageSubsystem>();
+	if (CombatRadio) {
+		CombatRadio->SetSwarmManager(this);
+	}
 
 	FTransform HiddenTransform;
 	HiddenTransform.SetLocation(FVector(0, 0, -999999.0f));
@@ -63,19 +68,18 @@ void ASwarmManager::Setup()
 
 void ASwarmManager::ControlEnemy(float DeltaTime)
 {
-	FVector playerPos = CachedPlayerPawn->GetActorLocation();
+	FVector* playerPos = CombatRadio->GetPlayerPosition();
 	const float AttackRangeSqrt = 10000.0f;
-	UCombatMessageSubsystem* CombatRadio = GetWorld()->GetSubsystem<UCombatMessageSubsystem>();
 	for (int i = 0; i < _enemyCount; i++)
 	{
 		if (!_isAlive[i]) { continue; }
-		FVector EnemyDirection = playerPos - _EnemyPosition[i];
+		FVector EnemyDirection = *playerPos - _EnemyPosition[i];
 		EnemyDirection.Normalize();
 		_EnemyDirection[i] = EnemyDirection;
 		_EnemyVelocity[i] = EnemyDirection * _speed[i];
 		_EnemyPosition[i] += _EnemyVelocity[i] * DeltaTime;
 
-		if (FVector::DistSquared(_EnemyPosition[i], playerPos) < AttackRangeSqrt) 
+		if (FVector::DistSquared(_EnemyPosition[i], *playerPos) < AttackRangeSqrt) 
 		{
 			CombatRadio->OnPlayerHit.Broadcast(_damage[i]);
 			KillEnemy(i);
@@ -103,7 +107,10 @@ void ASwarmManager::DrawEnemyMesh()
 
 int ASwarmManager::GetNextDeadEnemy() 
 {
-	if (_deadEnemies.Num() == 0) { return -1; }
+	if (_deadEnemies.Num() == 0) { 
+		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("None Left: %d"), HISMComponent->GetInstanceCount()));
+		return -1; }
+	GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("Some Left: %d"), HISMComponent->GetInstanceCount()));
 	int nextDeadEnemy = _deadEnemies.Pop();
 	return nextDeadEnemy;
 }
@@ -112,7 +119,7 @@ void ASwarmManager::KillEnemy(const int Enemy)
 {
 	_isAlive[Enemy] = false;
 	_deadEnemies.Push(Enemy);
-	CachedExpDrops->SpawnExp(_EnemyPosition[Enemy]);
+	ProgressRadio->ExpDropsSpawnExp(&_EnemyPosition[Enemy]);
 }
 
 void ASwarmManager::TakeDamage(const int Enemy, const float Damage)
@@ -140,8 +147,8 @@ void ASwarmManager::Tick(float DeltaTime)
 		if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("spawned")));
 	}
 	if (_spawnSpeedUpTimer >= SpawnSpeedup) {
-		_spawnTimer = FMath::Max(0.3f, _spawnTimer - 0.1f);
-		SpawnSpeedup = 0;
+		SpawnTime = FMath::Max(0.3f, SpawnTime - 0.1f);
+		_spawnSpeedUpTimer = 0;
 	}
 }
 
@@ -156,12 +163,12 @@ void ASwarmManager::SpawnEnemy(const FVector& SpawnLocation)
 
 FVector ASwarmManager::SetSpawnLocation()
 {
-	FVector playerPos = CachedPlayerPawn->GetActorLocation();
+	FVector* playerPos = CombatRadio->GetPlayerPosition();
 	float angle = FMath::RandRange(0.0f, 2.0f * PI);
 	float radius = 3000.0f;
 	float xOffset = FMath::Cos(angle) * radius;
 	float yOffset = FMath::Sin(angle) * radius;
-	FVector SpawnLocation = playerPos + FVector(xOffset, yOffset, 0.0f);
+	FVector SpawnLocation = *playerPos + FVector(xOffset, yOffset, 0.0f);
 	return SpawnLocation;
 }
 
@@ -182,7 +189,7 @@ int ASwarmManager::GetClostestEnemyIndex(const FVector& Location)
 	return closestEnemyIndex;
 }
 
-FVector ASwarmManager::GetEnemyPosition(const int EnemyIndex)
+FVector* ASwarmManager::GetEnemyPosition(const int EnemyIndex)
 {
-	return _EnemyPosition[EnemyIndex];
+	return &_EnemyPosition[EnemyIndex];
 }

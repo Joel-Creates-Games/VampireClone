@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
-#include "ExpDrops.h"
 #include "SwarmManager.generated.h"
 
 UCLASS()
@@ -17,10 +16,9 @@ public:
 	// Sets default values for this actor's properties
 	ASwarmManager();
 
-	UPROPERTY(VisibleAnywhere, Category = "References")
-	APawn* CachedPlayerPawn = nullptr;
-	UPROPERTY(VisibleAnywhere, Category = "References")
-	AExpDrops* CachedExpDrops = nullptr;
+	//UPROPERTY(VisibleAnywhere, Category = "References")
+	//APawn* CachedPlayerPawn = nullptr;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UHierarchicalInstancedStaticMeshComponent* HISMComponent;
 
@@ -38,6 +36,9 @@ public:
 	float SpawnSpeedup = 15.0f;
 
 private:
+	class UProgressionMessageSubsystem* ProgressRadio = nullptr;
+	class UCombatMessageSubsystem* CombatRadio = nullptr;
+
 	TArray<int> _deadEnemies;
 	static const int _enemyCount = 10;
 	FVector _EnemyDirection[_enemyCount];
@@ -69,7 +70,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	FVector SetSpawnLocation();
-	FVector GetEnemyPosition(const int EnemyIndex);
+	FVector* GetEnemyPosition(const int EnemyIndex);
 	int GetClostestEnemyIndex(const FVector& Location);
 	void TakeDamage(const int Enemy, const float Damage);
 	void SpawnEnemy(const FVector& SpawnLocation);

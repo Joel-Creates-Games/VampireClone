@@ -125,13 +125,12 @@ protected:
 	/** Timer to handle stick autofire */
 	FTimerHandle AutoFireTimer;
 
-	UPROPERTY(EditAnywhere, Category = "Magic Wand")
-	float wandAttackSpeed = 2.0f;
-	float wandCurrentSpeed = 0.0f;
+	FVector _position;
 
-	class ASwarmManager* CachedSwarmManager = nullptr;
-	class AMagicWandController* CachedWandController = nullptr;
-	class AExpDrops* CachedExpDrop = nullptr;
+	//class ASwarmManager* CachedSwarmManager = nullptr;
+	//class AMagicWandController* CachedWandController = nullptr;
+	//class AExpDrops* CachedExpDrop = nullptr;
+	class UProgressionMessageSubsystem* ProgressRadio = nullptr;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats")
@@ -191,7 +190,7 @@ protected:
 	/** Performs an AoE Attack */
 	void AoEAttack(const FInputActionValue& Value);
 
-	void MagicWand(float DeltaTime);
+	//void MagicWand(float DeltaTime);
 
 public:
 
@@ -237,6 +236,7 @@ public:
 
 	/** Applies collision impact to the player */
 	void HandleDamage(float Damage, const FVector& DamageDirection);
+	FVector* GetPosition();
 
 protected:
 

@@ -17,13 +17,15 @@ public:
 	// Sets default values for this actor's properties
 	AExpDrops();
 
-	UPROPERTY(VisibleAnywhere, Category = "References")
-	APawn* CachedPlayerPawn = nullptr;
+	//UPROPERTY(VisibleAnywhere, Category = "References")
+	//APawn* CachedPlayerPawn = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UInstancedStaticMeshComponent* ISMComponent;
 
 private:
+	class UCombatMessageSubsystem* _CombatRadio = nullptr;
+
 	TArray<int> _deadExp;
 	static const int _expCount = 100;
 	FVector _ExpDirection[_expCount];

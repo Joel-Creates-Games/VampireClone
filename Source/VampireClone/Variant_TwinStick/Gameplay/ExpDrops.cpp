@@ -5,6 +5,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "ProgressionMessageSubsystem.h"
+#include "CombatMessageSubsystem.h"
 
 // Sets default values
 AExpDrops::AExpDrops()
@@ -29,8 +30,13 @@ void AExpDrops::Setup()
 	if (!ensure(world)) return;
 	APlayerController* playerController = world->GetFirstPlayerController();
 	if (!ensure(playerController)) return;
-	CachedPlayerPawn = playerController->GetPawn();
-	if (!ensure(CachedPlayerPawn)) return;
+	//CachedPlayerPawn = playerController->GetPawn();
+	//if (!ensure(CachedPlayerPawn)) return;
+	UProgressionMessageSubsystem* ProgressRadio = GetWorld()->GetSubsystem<UProgressionMessageSubsystem>();
+	if (ProgressRadio) {
+		ProgressRadio->SetExpDrops(this);
+	}
+	_CombatRadio = GetWorld()->GetSubsystem<UCombatMessageSubsystem>();
 
 	_deadExp.Reserve(_expCount);
 
@@ -57,12 +63,12 @@ void AExpDrops::Setup()
 
 void AExpDrops::MoveExp(float DeltaTime)
 {
-
-	FVector playerPos = CachedPlayerPawn->GetActorLocation();
+	if (!_CombatRadio) { return; }
+	FVector* playerPos = _CombatRadio->GetPlayerPosition();
 	for(int i = 0; i < _expCount; i++)
 	{
 		if (!_alive[i]) { continue;}
-		float distanceToPlayer = FVector::DistSquared(_ExpPosition[i], playerPos);
+		float distanceToPlayer = FVector::DistSquared(_ExpPosition[i], *playerPos);
 		_timeLeft[i] -= DeltaTime;
 		if (_timeLeft[i] <= 0.0f)
 		{
@@ -76,7 +82,7 @@ void AExpDrops::MoveExp(float DeltaTime)
 			_ExpPosition[i] -= _ExpVelocity[i] * DeltaTime;
 			continue; 
 		}
-		_ExpDirection[i] = (playerPos - _ExpPosition[i]).GetSafeNormal();
+		_ExpDirection[i] = (*playerPos - _ExpPosition[i]).GetSafeNormal();
 		_currentSpeed[i] = FMath::Min(_currentSpeed[i] + 1000.0f * DeltaTime, _maxSpeed);
 		_ExpVelocity[i] = _ExpDirection[i] * _currentSpeed[i];
 		_ExpPosition[i] += _ExpVelocity[i] * DeltaTime;
@@ -85,14 +91,14 @@ void AExpDrops::MoveExp(float DeltaTime)
 
 float AExpDrops::CheckPlayerCollision()
 {
-	FVector playerPos = CachedPlayerPawn->GetActorLocation();
+	FVector* playerPos = _CombatRadio->GetPlayerPosition();
 	float totalGain = 0;
 	UProgressionMessageSubsystem* ProgressionRadio = GetWorld()->GetSubsystem<UProgressionMessageSubsystem>();
 	float fullValue = _expValue * _expValueModifier;
 	for (int i = 0; i < _expCount; i++)
 	{
 		if (!_alive[i]) { continue; }
-		if (FVector::DistSquared(_ExpPosition[i], playerPos) < _hitDistance)
+		if (FVector::DistSquared(_ExpPosition[i], *playerPos) < _hitDistance)
 		{
 			ProgressionRadio->OnExperienceGain.Broadcast(fullValue);
 			KillExp(i);
@@ -136,6 +142,7 @@ void AExpDrops::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	MoveExp(DeltaTime);
 	DrawExpMesh();
+	CheckPlayerCollision();
 }
 
 int AExpDrops::GetNextExp()

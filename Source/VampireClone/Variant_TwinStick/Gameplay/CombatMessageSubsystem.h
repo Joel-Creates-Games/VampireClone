@@ -16,4 +16,15 @@ class UCombatMessageSubsystem : public UWorldSubsystem
 public:
 	UPROPERTY()
 	FOnPlayerHitSigniture OnPlayerHit;
+
+public:
+	FVector* GetSwarmEnemyPosition(int pos);
+	void SetSwarmManager(class ASwarmManager* swarm);
+	void SetTwinStickCharacter(class ATwinStickCharacter* player);
+	int GetClosestSwarm(FVector location);
+	void SwarmTakeDamage(int index, float damage);
+	FVector* GetPlayerPosition();
+private:
+	ASwarmManager* _swarm = nullptr;
+	ATwinStickCharacter* _player = nullptr;
 };
