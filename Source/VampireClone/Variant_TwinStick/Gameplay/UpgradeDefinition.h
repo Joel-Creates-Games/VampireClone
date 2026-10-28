@@ -25,12 +25,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Broadcast")
 	FGameplayTag weaponTag;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Modifiers")
 	float DamageMultiplier;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Modifiers")
 	float SpeedMultiplier;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Modifiers")
 	float AttackSpeedChange;
+
+	UPROPERTY(EditAnywhere, Category = "Modifiers")
+	float AreaChange;
 };
