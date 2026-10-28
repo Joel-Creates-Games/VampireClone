@@ -15,3 +15,8 @@ void UProgressionMessageSubsystem::SetExpDrops(AExpDrops* exp)
 {
 	_exp = exp;
 }
+
+void UProgressionMessageSubsystem::BroadcastOnUpgradeSelected(UUpgradeDefinition* tag)
+{
+	OnUpgradeSelected.Broadcast(tag);
+}

@@ -20,8 +20,9 @@ public class VampireClone : ModuleRules
 			"GameplayStateTreeModule",
 			"Niagara",
 			"UMG",
-			"Slate"
-		});
+			"Slate",
+            "GameplayTags"
+        });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 

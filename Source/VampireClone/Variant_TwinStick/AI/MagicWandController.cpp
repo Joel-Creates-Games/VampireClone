@@ -4,6 +4,8 @@
 #include "Variant_TwinStick/AI/MagicWandController.h"
 #include <Kismet/GameplayStatics.h>
 #include "CombatMessageSubsystem.h"
+#include "ProgressionMessageSubsystem.h"
+#include "UpgradeDefinition.h"
 
 // Sets default values
 AMagicWandController::AMagicWandController()
@@ -28,6 +30,10 @@ void AMagicWandController::Setup()
 	//_SwarmManager = Cast<ASwarmManager>(swarmInstance);
 	//if(!_SwarmManager) { return; }
 	_CombatRadio = GetWorld()->GetSubsystem<UCombatMessageSubsystem>();
+	UProgressionMessageSubsystem* ProgressRadio = GetWorld()->GetSubsystem<UProgressionMessageSubsystem>();
+	if (ProgressRadio) {
+		ProgressRadio->OnUpgradeSelected.AddDynamic(this, &AMagicWandController::Upgrade);
+	}
 
 	_deadProjectiles.Reserve(_projectileCount);
 
@@ -96,6 +102,16 @@ void AMagicWandController::SpawnProjectile(FVector Location, FVector Direction)
 	_timeLeft[nextDeadProjectile] = 0.0f;
 }
 
+void AMagicWandController::Upgrade(UUpgradeDefinition* upgrade)
+{
+	if (upgrade->weaponTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Weapons.Wand")))) 
+	{
+		_baseSpeedModifier *= upgrade->SpeedMultiplier;
+		_baseDamageModifier *= upgrade->DamageMultiplier;
+		_wandAttackSpeed = FMath::Max(0.3f, _wandAttackSpeed - upgrade->AttackSpeedChange);
+	}
+}
+
 void AMagicWandController::KillProjectile(const int Projectile)
 {
 	_alive[Projectile] = false;
@@ -120,11 +136,11 @@ void AMagicWandController::CheckEnemyCollision()
 
 void AMagicWandController::MagicWand(float DeltaTime)
 {
-	wandCurrentSpeed += DeltaTime;
-	if (wandCurrentSpeed > wandAttackSpeed) {
+	_wandCurrentSpeed += DeltaTime;
+	if (_wandCurrentSpeed > _wandAttackSpeed) {
 		FVector* playPos = _CombatRadio->GetPlayerPosition();
 		if (!playPos) { return; }
-		wandCurrentSpeed = 0;
+		_wandCurrentSpeed = 0;
 		int closest = _CombatRadio->GetClosestSwarm(*playPos);
 		if (closest == -1) { return; }
 		FVector* closestEnemyLocation = _CombatRadio->GetSwarmEnemyPosition(closest);

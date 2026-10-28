@@ -4,12 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
+#include "GameplayTagContainer.h"
 #include "ProgressionMessageSubsystem.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnExperienceGain, float, GainAmount);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelUp, float, Level);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnApplyPowerup, UUpgradeDefinition*, Upgrade);
-//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOn);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUpgradeSelected, UUpgradeDefinition*, Upgrade);
 
 
 UCLASS()
@@ -22,7 +22,7 @@ public:
 
 	FOnLevelUp OnLevelUp;
 
-	FOnApplyPowerup OnApplyPowerup;
+	FOnUpgradeSelected OnUpgradeSelected;
 
 
 
@@ -30,6 +30,11 @@ public:
 	void ExpDropsSpawnExp(FVector* position);
 	void SetExpDrops(class AExpDrops* exp);
 	AExpDrops& GetExpDrops() { return *_exp; }
+
+	//broadcasting
+public:
+	UFUNCTION(BlueprintCallable, Category = "Progression Subsystem")
+	void BroadcastOnUpgradeSelected(UUpgradeDefinition* tag);
 
 private:
 	AExpDrops* _exp;

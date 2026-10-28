@@ -57,8 +57,8 @@ protected:
 	float _baseDamageModifier = 10.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Magic Wand")
-	float wandAttackSpeed = 2.0f;
-	float wandCurrentSpeed = 0.0f;
+	float _wandAttackSpeed = 2.0f;
+	float _wandCurrentSpeed = 0.0f;
 
 public:	
 	// Called every frame
@@ -66,4 +66,6 @@ public:
 
 	int GetNextProjectile();
 	void SpawnProjectile(FVector Location, FVector Direction);
+	UFUNCTION()
+	void Upgrade(UUpgradeDefinition* upgrade);
 };
