@@ -19,10 +19,12 @@ public:
 
 public:
 	FVector* GetSwarmEnemyPosition(int pos);
+	//TArray<FVector>* GetSwarmEnemyPositionAll();
 	void SetSwarmManager(class ASwarmManager* swarm);
 	void SetTwinStickCharacter(class ATwinStickCharacter* player);
 	int GetClosestSwarm(FVector location);
 	void SwarmTakeDamage(int index, float damage);
+	void SwarmTakeAOEDamage(const FVector& center, float radius, float damage);
 	FVector* GetPlayerPosition();
 private:
 	ASwarmManager* _swarm = nullptr;

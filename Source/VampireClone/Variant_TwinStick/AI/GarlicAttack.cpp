@@ -11,9 +11,8 @@ AGarlicAttack::AGarlicAttack() {
 }
 
 void  AGarlicAttack::Setup() {
-
-	_hitDistanceSquared = 90000.0f;
 	_projectileCount = 1;
+	_scale = 4.0f;
 	Super::Setup();
 }
 
@@ -25,6 +24,12 @@ void AGarlicAttack::Behaviour(float DeltaTime)
 		FVector* playerPos = _CombatRadio->GetPlayerPosition();
 		if (playerPos == nullptr) { return; }
 		SpawnProjectile(*playerPos, FVector::Zero());
+		return;
+	}
+	if (_CurrentSpeed > _AttackSpeed) 
+	{
+		_CurrentSpeed = 0;
+		CheckEnemyCollision();
 	}
 }
 
@@ -42,26 +47,18 @@ void AGarlicAttack::CheckEnemyCollision()
 {
 	for (int i = 0; i < _projectileCount; i++)
 	{
-		if (!_alive[i]) { continue; }
-		int closestEnemyIndex = _CombatRadio->GetClosestSwarm(_ProjectilePosition[i]);
-		if (closestEnemyIndex == -1) { continue; }
-		FVector* enemyPos = _CombatRadio->GetSwarmEnemyPosition(closestEnemyIndex);
-		float distance = FVector::DistSquared(_ProjectilePosition[i], *enemyPos);
-		if (distance < _hitDistanceSquared) {
-			KillProjectile(i);
-			_CombatRadio->SwarmTakeDamage(closestEnemyIndex, baseDamage * _baseDamageModifier);
-		}
+		_CombatRadio->SwarmTakeAOEDamage(_ProjectilePosition[i], _hitDistanceSquared, baseDamage * _baseDamageModifier);
 	}
 }
 
 bool AGarlicAttack::Upgrade(UUpgradeDefinition* upgrade)
 {
+	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, FString::Printf(TEXT("Actual Spawns: %d"), HISMComponent->GetInstanceCount()));
+	if (!upgrade->weaponTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Weapons.Garlic")))) { return false; }
 	if (!Super::Upgrade(upgrade)) { return false; }
-	if (upgrade->weaponTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Weapons.Garlic")))) 
-	{
-		_AttackSpeed = FMath::Max(0.3f, _AttackSpeed - upgrade->AttackSpeedChange);
-		_baseAreaModifier *= upgrade->AreaChange;
-		_baseDamageModifier *= upgrade->DamageMultiplier;
-	}
+	_AttackSpeed = FMath::Max(0.3f, _AttackSpeed - upgrade->AttackSpeedChange);
+	_scale *= upgrade->AreaChange;
+	_hitDistanceSquared = FMath::Square(_scale * 50.0f);
+	_baseDamageModifier *= upgrade->DamageMultiplier;
 	return false;
 }

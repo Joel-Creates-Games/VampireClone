@@ -39,6 +39,8 @@ protected:
 	virtual void KillProjectile(const int Projectile);
 	virtual void CheckEnemyCollision();
 	virtual void Behaviour(float DeltaTime);
+
+	UFUNCTION()
 	virtual void UpgradeDelegate(UUpgradeDefinition* upgrade);
 
 protected:
@@ -54,7 +56,9 @@ protected:
 	TArray<float> _timeLeft;
 	TArray<bool> _alive;
 
-	float _hitDistanceSquared = 15625.0f;
+	UPROPERTY(EditAnywhere, Category = "Stats")
+	float _scale = 1;
+	float _hitDistanceSquared = 10000;
 
 	float _baseSpeedModifier = 1.0f;
 	float _baseDamageModifier = 10.0f;

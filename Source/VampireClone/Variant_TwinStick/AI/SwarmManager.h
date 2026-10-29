@@ -40,14 +40,14 @@ private:
 	class UCombatMessageSubsystem* CombatRadio = nullptr;
 
 	TArray<int> _deadEnemies;
-	static const int _enemyCount = 10;
-	FVector _EnemyDirection[_enemyCount];
-	FVector _EnemyPosition[_enemyCount];
-	FVector _EnemyVelocity[_enemyCount];
-	float _speed[_enemyCount];
-	float _damage[_enemyCount];
-	float _health[_enemyCount];
-	bool _isAlive[_enemyCount];
+	int _enemyCount = 10;
+	TArray<FVector> _EnemyDirection;
+	TArray<FVector> _EnemyPosition;
+	TArray<FVector> _EnemyVelocity;
+	TArray<float> _speed;
+	TArray<float> _damage;
+	TArray<float> _health;
+	TArray<bool> _isAlive;
 
 	float _spawnTimer = 0.0f;
 	float _spawnSpeedUpTimer = 0.0f;
@@ -72,6 +72,8 @@ public:
 	FVector SetSpawnLocation();
 	FVector* GetEnemyPosition(const int EnemyIndex);
 	int GetClostestEnemyIndex(const FVector& Location);
+	TArray<FVector>* GetEnemyPositions();
 	void TakeDamage(const int Enemy, const float Damage);
+	void TakeAOEDamage(const FVector& center, float radius, float damage);
 	void SpawnEnemy(const FVector& SpawnLocation);
 };

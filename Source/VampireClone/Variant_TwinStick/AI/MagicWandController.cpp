@@ -16,17 +16,16 @@ AMagicWandController::AMagicWandController()
 void AMagicWandController::Setup()
 {
 	Super::Setup();
+	_isEquipped = true;
 }
 
 bool AMagicWandController::Upgrade(UUpgradeDefinition* upgrade)
 {
+	if (!upgrade->weaponTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Weapons.Wand")))) { return false; }
 	if (!Super::Upgrade(upgrade)) { return false; }
-	if (upgrade->weaponTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Weapons.Wand")))) 
-	{
-		_baseSpeedModifier *= upgrade->SpeedMultiplier;
-		_baseDamageModifier *= upgrade->DamageMultiplier;
-		_AttackSpeed = FMath::Max(0.3f, _AttackSpeed - upgrade->AttackSpeedChange);
-	}
+	_baseSpeedModifier *= upgrade->SpeedMultiplier;
+	_baseDamageModifier *= upgrade->DamageMultiplier;
+	_AttackSpeed = FMath::Max(0.3f, _AttackSpeed - upgrade->AttackSpeedChange);
 	return false;
 }
 

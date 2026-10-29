@@ -49,17 +49,24 @@ void ASwarmManager::Setup()
 	TArray<FTransform> InstanceTransforms;
 	InstanceTransforms.Init(HiddenTransform, _enemyCount);
 
+	_EnemyDirection.Reserve(_enemyCount);
+	_EnemyPosition.Reserve(_enemyCount);
+	_EnemyVelocity.Reserve(_enemyCount);
+	_speed.Reserve(_enemyCount);
+	_damage.Reserve(_enemyCount);
+	_health.Reserve(_enemyCount);
+	_isAlive.Reserve(_enemyCount);
 	_deadEnemies.Reserve(_enemyCount);
 
 	for (int i = 0; i < _enemyCount; i++)
 	{
-		_EnemyDirection[i] = FVector(0, 0, 0);
-		_EnemyPosition[i] = FVector(0, 0, 0);
-		_EnemyVelocity[i] = FVector(0, 0, 0);
-		_speed[i] = BaseSpeed;
-		_damage[i] = BaseDamage;
-		_health[i] = BaseHealth;
-		_isAlive[i] = false;
+		_EnemyDirection.Push(FVector(0, 0, 0));
+		_EnemyPosition.Push(FVector(0, 0, 0));
+		_EnemyVelocity.Push(FVector(0, 0, 0));
+		_speed.Push(BaseSpeed);
+		_damage.Push(BaseDamage);
+		_health.Push(BaseHealth);
+		_isAlive.Push(false);
 		_deadEnemies.Push(i);
 	}
 	HISMComponent->AddInstances(InstanceTransforms, false);
@@ -124,12 +131,22 @@ void ASwarmManager::KillEnemy(const int Enemy)
 
 void ASwarmManager::TakeDamage(const int Enemy, const float Damage)
 {
-	_health[Enemy] -= Damage;
 	if(!_isAlive[Enemy]) { return; }
-	if (_health[Enemy] <= 0)
+	_health[Enemy] = FMath::Max(0, _health[Enemy] - Damage);
+	if (_health[Enemy] == 0)
 	{
-		_health[Enemy] = 0;
 		KillEnemy(Enemy);
+	}
+}
+
+void ASwarmManager::TakeAOEDamage(const FVector& center, float radius, float damage)
+{
+	for (int i = 0; i < _enemyCount; i++)
+	{
+		if (!_isAlive[i]) { continue; }
+		float distance = FVector::DistSquared(_EnemyPosition[i], center);
+		if (distance > radius) { continue; }
+		TakeDamage(i, damage);
 	}
 }
 
@@ -187,6 +204,11 @@ int ASwarmManager::GetClostestEnemyIndex(const FVector& Location)
 		}
 	}
 	return closestEnemyIndex;
+}
+
+TArray<FVector>* ASwarmManager::GetEnemyPositions()
+{
+	return &_EnemyPosition;
 }
 
 FVector* ASwarmManager::GetEnemyPosition(const int EnemyIndex)

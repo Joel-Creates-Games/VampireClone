@@ -22,6 +22,8 @@ void AWeaponController::Setup()
 	//AActor* swarmInstance = Cast<ASwarmManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ASwarmManager::StaticClass()));
 	//_SwarmManager = Cast<ASwarmManager>(swarmInstance);
 	//if(!_SwarmManager) { return; }
+
+	_hitDistanceSquared = FMath::Square(_scale*50.0f);
 	_CombatRadio = GetWorld()->GetSubsystem<UCombatMessageSubsystem>();
 
 	UProgressionMessageSubsystem* ProgressRadio = GetWorld()->GetSubsystem<UProgressionMessageSubsystem>();
@@ -45,12 +47,12 @@ void AWeaponController::Setup()
 
 	for (int i = 0; i < _projectileCount; i++)
 	{
-		_ProjectileDirection[i] = FVector(0, 0, 0);
-		_ProjectilePosition[i] = FVector(0, 0, 0);
-		_ProjectileVelocity[i] = FVector(0, 0, 0);
+		_ProjectileDirection.Push(FVector(0, 0, 0));
+		_ProjectilePosition.Push(FVector(0, 0, 0));
+		_ProjectileVelocity.Push(FVector(0, 0, 0));
 
-		_timeLeft[i] = 0.0f;
-		_alive[i] = false;
+		_timeLeft.Push(0.0f);
+		_alive.Push(false);
 
 		_deadProjectiles.Push(i);
 	}
@@ -70,6 +72,7 @@ void AWeaponController::DrawProjectileMesh()
 		FTransform ProjectileTransform;
 		if (_alive[i]) {
 			ProjectileTransform.SetLocation(_ProjectilePosition[i]);
+			ProjectileTransform.SetScale3D(FVector(_scale, _scale, _scale));
 		}
 		else
 		{
@@ -97,6 +100,7 @@ bool AWeaponController::Upgrade(UUpgradeDefinition* upgrade)
 {
 	if (!_isEquipped) {
 		_isEquipped = true;
+		if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("Actual Spawns: %d"), HISMComponent->GetInstanceCount()));
 		return false;
 	}
 	return true;
@@ -109,6 +113,7 @@ void AWeaponController::Behaviour(float DeltaTime)
 
 void AWeaponController::UpgradeDelegate(UUpgradeDefinition* upgrade)
 {
+	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, FString::Printf(TEXT("OOOO YUMMMY")));
 	Upgrade(upgrade);
 }
 
@@ -144,6 +149,7 @@ void AWeaponController::BeginPlay()
 // Called every frame
 void AWeaponController::Tick(float DeltaTime)
 {
+	if (!_isEquipped) { return; }
 	Super::Tick(DeltaTime);
 	MoveProjectiles(DeltaTime);
 	DrawProjectileMesh();

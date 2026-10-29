@@ -33,6 +33,12 @@ void UCombatMessageSubsystem::SwarmTakeDamage(int index, float damage)
 	_swarm->TakeDamage(index, damage);
 }
 
+void UCombatMessageSubsystem::SwarmTakeAOEDamage(const FVector& center, float radius, float damage)
+{
+	if (_swarm == nullptr) { return; }
+	_swarm->TakeAOEDamage(center, radius, damage);
+}
+
 FVector* UCombatMessageSubsystem::GetPlayerPosition()
 {
 	if (_player == nullptr) { return nullptr; }

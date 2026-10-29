@@ -34,6 +34,4 @@ public:
 	//virtual void SpawnProjectile(FVector Location, FVector Direction) override;
 	virtual bool Upgrade(UUpgradeDefinition* upgrade) override;
 
-private:
-	bool _isEquipped = true;
 };
