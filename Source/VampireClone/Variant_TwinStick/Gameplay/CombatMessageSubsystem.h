@@ -7,6 +7,7 @@
 #include "CombatMessageSubsystem.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerHitSigniture, float, DamageAmount);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerMoveRight, bool, IsRight);
 
 UCLASS()
 class UCombatMessageSubsystem : public UWorldSubsystem
@@ -16,10 +17,12 @@ class UCombatMessageSubsystem : public UWorldSubsystem
 public:
 	UPROPERTY()
 	FOnPlayerHitSigniture OnPlayerHit;
+	UPROPERTY()
+	FOnPlayerMoveRight OnPlayerMoveRight;
 
 public:
 	FVector* GetSwarmEnemyPosition(int pos);
-	//TArray<FVector>* GetSwarmEnemyPositionAll();
+	FVector* GetSwarmEnemyScale(int pos);
 	void SetSwarmManager(class ASwarmManager* swarm);
 	void SetTwinStickCharacter(class ATwinStickCharacter* player);
 	int GetClosestSwarm(FVector location);

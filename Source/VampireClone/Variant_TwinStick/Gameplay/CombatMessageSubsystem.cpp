@@ -11,6 +11,12 @@ FVector* UCombatMessageSubsystem::GetSwarmEnemyPosition(int pos)
 	return _swarm->GetEnemyPosition(pos);
 }
 
+FVector* UCombatMessageSubsystem::GetSwarmEnemyScale(int pos)
+{
+	if (_swarm == nullptr) { return nullptr; }
+	return _swarm->GetEnemyScale(pos);
+}
+
 void UCombatMessageSubsystem::SetSwarmManager(ASwarmManager* swarm)
 {
 	_swarm = swarm;

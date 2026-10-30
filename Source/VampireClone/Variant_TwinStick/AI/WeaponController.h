@@ -57,7 +57,7 @@ protected:
 	TArray<bool> _alive;
 
 	UPROPERTY(EditAnywhere, Category = "Stats")
-	float _scale = 1;
+	float _scaleX = 1; float _scaleY = 1; float _scaleZ = 1;
 	float _hitDistanceSquared = 10000;
 
 	float _baseSpeedModifier = 1.0f;
@@ -76,7 +76,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual int GetNextProjectile();
-	virtual void SpawnProjectile(FVector Location, FVector Direction);
+	virtual int SpawnProjectile(FVector Location, FVector Direction);
 	UFUNCTION()
 	virtual bool Upgrade(UUpgradeDefinition* upgrade);
 };

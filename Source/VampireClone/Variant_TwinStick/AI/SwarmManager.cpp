@@ -52,6 +52,7 @@ void ASwarmManager::Setup()
 	_EnemyDirection.Reserve(_enemyCount);
 	_EnemyPosition.Reserve(_enemyCount);
 	_EnemyVelocity.Reserve(_enemyCount);
+	_EnemyScale.Reserve(_enemyCount);
 	_speed.Reserve(_enemyCount);
 	_damage.Reserve(_enemyCount);
 	_health.Reserve(_enemyCount);
@@ -63,6 +64,7 @@ void ASwarmManager::Setup()
 		_EnemyDirection.Push(FVector(0, 0, 0));
 		_EnemyPosition.Push(FVector(0, 0, 0));
 		_EnemyVelocity.Push(FVector(0, 0, 0));
+		_EnemyScale.Push(FVector(_scale, _scale, _scale));
 		_speed.Push(BaseSpeed);
 		_damage.Push(BaseDamage);
 		_health.Push(BaseHealth);
@@ -145,7 +147,8 @@ void ASwarmManager::TakeAOEDamage(const FVector& center, float radius, float dam
 	{
 		if (!_isAlive[i]) { continue; }
 		float distance = FVector::DistSquared(_EnemyPosition[i], center);
-		if (distance > radius) { continue; }
+		float bounds = FMath::Square(_scale * 50);
+		if (distance - bounds > radius) { continue; }
 		TakeDamage(i, damage);
 	}
 }
@@ -214,4 +217,9 @@ TArray<FVector>* ASwarmManager::GetEnemyPositions()
 FVector* ASwarmManager::GetEnemyPosition(const int EnemyIndex)
 {
 	return &_EnemyPosition[EnemyIndex];
+}
+
+FVector* ASwarmManager::GetEnemyScale(int EnemyIndex)
+{
+	return &_EnemyScale[EnemyIndex];
 }

@@ -23,7 +23,7 @@ void AWeaponController::Setup()
 	//_SwarmManager = Cast<ASwarmManager>(swarmInstance);
 	//if(!_SwarmManager) { return; }
 
-	_hitDistanceSquared = FMath::Square(_scale*50.0f);
+	_hitDistanceSquared = FMath::Square(_scaleX*50.0f);
 	_CombatRadio = GetWorld()->GetSubsystem<UCombatMessageSubsystem>();
 
 	UProgressionMessageSubsystem* ProgressRadio = GetWorld()->GetSubsystem<UProgressionMessageSubsystem>();
@@ -63,6 +63,7 @@ void AWeaponController::Setup()
 
 void AWeaponController::MoveProjectiles(float DeltaTime)
 {
+
 }
 
 void AWeaponController::DrawProjectileMesh()
@@ -72,7 +73,7 @@ void AWeaponController::DrawProjectileMesh()
 		FTransform ProjectileTransform;
 		if (_alive[i]) {
 			ProjectileTransform.SetLocation(_ProjectilePosition[i]);
-			ProjectileTransform.SetScale3D(FVector(_scale, _scale, _scale));
+			ProjectileTransform.SetScale3D(FVector(_scaleX, _scaleY, _scaleZ));
 		}
 		else
 		{
@@ -85,15 +86,16 @@ void AWeaponController::DrawProjectileMesh()
 	HISMComponent->UpdateBounds();
 }
 
-void AWeaponController::SpawnProjectile(FVector Location, FVector Direction)
+int AWeaponController::SpawnProjectile(FVector Location, FVector Direction)
 {
 	int nextDeadProjectile = GetNextProjectile();
-	if (nextDeadProjectile == -1) { return; }
+	if (nextDeadProjectile == -1) { return nextDeadProjectile; }
 	_alive[nextDeadProjectile] = true;
 	_ProjectilePosition[nextDeadProjectile] = Location;
 	_ProjectileDirection[nextDeadProjectile] = Direction.GetSafeNormal();
 	_ProjectileVelocity[nextDeadProjectile] = _ProjectileDirection[nextDeadProjectile] * baseMoveSpeed * _baseSpeedModifier;
 	_timeLeft[nextDeadProjectile] = 0.0f;
+	return nextDeadProjectile;
 }
 
 bool AWeaponController::Upgrade(UUpgradeDefinition* upgrade)
@@ -113,7 +115,6 @@ void AWeaponController::Behaviour(float DeltaTime)
 
 void AWeaponController::UpgradeDelegate(UUpgradeDefinition* upgrade)
 {
-	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, FString::Printf(TEXT("OOOO YUMMMY")));
 	Upgrade(upgrade);
 }
 
@@ -131,8 +132,10 @@ void AWeaponController::CheckEnemyCollision()
 		int closestEnemyIndex = _CombatRadio->GetClosestSwarm(_ProjectilePosition[i]);
 		if (closestEnemyIndex == -1) { continue; }
 		FVector* enemyPos = _CombatRadio->GetSwarmEnemyPosition(closestEnemyIndex);
+		FVector* enemyScale = _CombatRadio->GetSwarmEnemyScale(closestEnemyIndex);
+		float enemySize = FMath::Square(enemyScale->X * 50);
 		float distance = FVector::DistSquared(_ProjectilePosition[i], *enemyPos);
-		if (distance < _hitDistanceSquared) {
+		if (distance - enemySize < _hitDistanceSquared) {
 			KillProjectile(i);
 			_CombatRadio->SwarmTakeDamage(closestEnemyIndex, baseDamage * _baseDamageModifier);
 		}

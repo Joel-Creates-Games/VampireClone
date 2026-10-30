@@ -62,14 +62,14 @@ void ATwinStickCharacter::BeginPlay()
 	//CachedWandController = Cast<AMagicWandController>(FoundMagicWandController);
 	//AActor* FoundExpDrops = UGameplayStatics::GetActorOfClass(GetWorld(), AExpDrops::StaticClass());
 	//CachedExpDrop = Cast<AExpDrops>(FoundExpDrops);
-	UCombatMessageSubsystem* CombatRadio = GetWorld()->GetSubsystem<UCombatMessageSubsystem>();
-	if (CombatRadio) {
-		CombatRadio->OnPlayerHit.AddDynamic(this, &ATwinStickCharacter::TwinStickTakeDamage);
-		CombatRadio->SetTwinStickCharacter(this);
+	_CombatRadio = GetWorld()->GetSubsystem<UCombatMessageSubsystem>();
+	if (_CombatRadio) {
+		_CombatRadio->OnPlayerHit.AddDynamic(this, &ATwinStickCharacter::TwinStickTakeDamage);
+		_CombatRadio->SetTwinStickCharacter(this);
 	}
-	ProgressRadio = GetWorld()->GetSubsystem<UProgressionMessageSubsystem>();
-	if (ProgressRadio) {
-		ProgressRadio->OnExperienceGain.AddDynamic(this, &ATwinStickCharacter::TwinStickGainExperience);
+	_ProgressRadio = GetWorld()->GetSubsystem<UProgressionMessageSubsystem>();
+	if (_ProgressRadio) {
+		_ProgressRadio->OnExperienceGain.AddDynamic(this, &ATwinStickCharacter::TwinStickGainExperience);
 		//ProgressRadio->OnC
 		//ProgressionRadio->OnApplyPowerup.AddDynamic(this, &ATwinStickCharacter::TwinStickApplyPowerup);
 	}
@@ -167,6 +167,7 @@ void ATwinStickCharacter::Move(const FInputActionValue& Value)
 {
 	// save the input vector
 	FVector2D InputVector = Value.Get<FVector2D>();
+	_CombatRadio->OnPlayerMoveRight.Broadcast(InputVector.X > 0.1f);
 
 	// route the input
 	DoMove(InputVector.X, InputVector.Y);
@@ -370,7 +371,7 @@ void ATwinStickCharacter::AddExperience(float Experience)
 
 void ATwinStickCharacter::CheckCollisions()
 {
-	if (!ProgressRadio) { return; }
+	if (!_ProgressRadio) { return; }
 
 	//_totalExperience += ProgressRadio->GetExpDrops().;
 }

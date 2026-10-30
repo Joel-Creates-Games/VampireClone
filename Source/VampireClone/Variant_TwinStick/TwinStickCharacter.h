@@ -130,7 +130,8 @@ protected:
 	//class ASwarmManager* CachedSwarmManager = nullptr;
 	//class AMagicWandController* CachedWandController = nullptr;
 	//class AExpDrops* CachedExpDrop = nullptr;
-	class UProgressionMessageSubsystem* ProgressRadio = nullptr;
+	class UProgressionMessageSubsystem* _ProgressRadio = nullptr;
+	class UCombatMessageSubsystem* _CombatRadio = nullptr;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats")

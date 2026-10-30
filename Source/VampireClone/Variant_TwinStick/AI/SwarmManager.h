@@ -44,10 +44,16 @@ private:
 	TArray<FVector> _EnemyDirection;
 	TArray<FVector> _EnemyPosition;
 	TArray<FVector> _EnemyVelocity;
+	TArray<FVector> _EnemyScale;
 	TArray<float> _speed;
 	TArray<float> _damage;
 	TArray<float> _health;
 	TArray<bool> _isAlive;
+
+	/// <summary>
+	/// update this later for different enemies
+	/// </summary>
+	float _scale = 1.0f;
 
 	float _spawnTimer = 0.0f;
 	float _spawnSpeedUpTimer = 0.0f;
@@ -71,6 +77,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	FVector SetSpawnLocation();
 	FVector* GetEnemyPosition(const int EnemyIndex);
+	FVector* GetEnemyScale(int EnemyIndex);
 	int GetClostestEnemyIndex(const FVector& Location);
 	TArray<FVector>* GetEnemyPositions();
 	void TakeDamage(const int Enemy, const float Damage);

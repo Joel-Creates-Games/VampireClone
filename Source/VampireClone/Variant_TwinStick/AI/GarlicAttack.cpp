@@ -12,7 +12,9 @@ AGarlicAttack::AGarlicAttack() {
 
 void  AGarlicAttack::Setup() {
 	_projectileCount = 1;
-	_scale = 4.0f;
+	_scaleX = 4.0f;
+	_scaleY = 4.0f;
+	_scaleZ = 1.0f;
 	Super::Setup();
 }
 
@@ -53,12 +55,11 @@ void AGarlicAttack::CheckEnemyCollision()
 
 bool AGarlicAttack::Upgrade(UUpgradeDefinition* upgrade)
 {
-	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, FString::Printf(TEXT("Actual Spawns: %d"), HISMComponent->GetInstanceCount()));
 	if (!upgrade->weaponTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Weapons.Garlic")))) { return false; }
 	if (!Super::Upgrade(upgrade)) { return false; }
 	_AttackSpeed = FMath::Max(0.3f, _AttackSpeed - upgrade->AttackSpeedChange);
-	_scale *= upgrade->AreaChange;
-	_hitDistanceSquared = FMath::Square(_scale * 50.0f);
+	_scaleX *= upgrade->AreaChange;
+	_hitDistanceSquared = FMath::Square(_scaleX * 50.0f);
 	_baseDamageModifier *= upgrade->DamageMultiplier;
 	return false;
 }
