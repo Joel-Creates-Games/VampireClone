@@ -81,6 +81,6 @@ public:
 	int GetClostestEnemyIndex(const FVector& Location);
 	TArray<FVector>* GetEnemyPositions();
 	void TakeDamage(const int Enemy, const float Damage);
-	void TakeAOEDamage(const FVector& center, float radius, float damage);
+	void TakeAOEDamage(const FVector& center, float radiusX, float radiusY, float damage);
 	void SpawnEnemy(const FVector& SpawnLocation);
 };

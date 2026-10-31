@@ -141,14 +141,17 @@ void ASwarmManager::TakeDamage(const int Enemy, const float Damage)
 	}
 }
 
-void ASwarmManager::TakeAOEDamage(const FVector& center, float radius, float damage)
+void ASwarmManager::TakeAOEDamage(const FVector& center, float radiusX, float radiusY, float damage)
 {
 	for (int i = 0; i < _enemyCount; i++)
 	{
 		if (!_isAlive[i]) { continue; }
-		float distance = FVector::DistSquared(_EnemyPosition[i], center);
+		//float distance = FVector::DistSquared(_EnemyPosition[i], center);
+		FVector relativeToPlayer = FVector(_EnemyPosition[i].X - center.X, _EnemyPosition[i].Y - center.Y, 0);
 		float bounds = FMath::Square(_scale * 50);
-		if (distance - bounds > radius) { continue; }
+		float ellipse = (FMath::Square(relativeToPlayer.X) / FMath::Square(radiusX+bounds)) +
+			(FMath::Square(relativeToPlayer.Y) / FMath::Square(radiusY+bounds));
+		if (ellipse >= 1) { continue; }
 		TakeDamage(i, damage);
 	}
 }

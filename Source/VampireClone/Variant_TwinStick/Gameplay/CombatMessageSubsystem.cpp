@@ -39,10 +39,10 @@ void UCombatMessageSubsystem::SwarmTakeDamage(int index, float damage)
 	_swarm->TakeDamage(index, damage);
 }
 
-void UCombatMessageSubsystem::SwarmTakeAOEDamage(const FVector& center, float radius, float damage)
+void UCombatMessageSubsystem::SwarmTakeAOEDamage(const FVector& center, float radiusX, float radiusY, float damage)
 {
 	if (_swarm == nullptr) { return; }
-	_swarm->TakeAOEDamage(center, radius, damage);
+	_swarm->TakeAOEDamage(center, radiusX, radiusY, damage);
 }
 
 FVector* UCombatMessageSubsystem::GetPlayerPosition()

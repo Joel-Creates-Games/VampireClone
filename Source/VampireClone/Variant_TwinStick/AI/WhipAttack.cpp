@@ -3,6 +3,7 @@
 
 #include "Variant_TwinStick/AI/WhipAttack.h"
 #include "CombatMessageSubsystem.h"
+#include "UpgradeDefinition.h"
 
 
 AWhipAttack::AWhipAttack()
@@ -11,7 +12,7 @@ AWhipAttack::AWhipAttack()
 
 void  AWhipAttack::Setup()
 {
-	_projectileCount = 1;
+	_projectileCount = 10;
 	_scaleX = 4.0f;
 	_scaleY = 2.0f;
 	_scaleZ = 1.0f;
@@ -23,8 +24,9 @@ void  AWhipAttack::Setup()
 	_ProjectilePlayerOffset.Reserve(_projectileCount);
 	for (int i = 0; i < _projectileCount; i++)
 	{
-		_ProjectilePlayerOffset[i] = FVector(0.0f, 0.0f, 0.0f);
+		_ProjectilePlayerOffset.Push(FVector(0.0f, 0.0f, 0.0f));
 	}
+	_hitDistanceSquaredY = FMath::Square(_scaleY * 50);
 }
 
 void AWhipAttack::Behaviour(float DeltaTime)
@@ -34,12 +36,16 @@ void AWhipAttack::Behaviour(float DeltaTime)
 		_currentMultiAttackSpeed += DeltaTime;
 		if (_currentMultiAttackSpeed < _multiAttackDelay) { return; }
 		FVector* playerPos = _CombatRadio->GetPlayerPosition();
-		FVector spawnPos = FVector(playerPos->X + ((_scaleX * 100) * _goingRight), playerPos->Y, playerPos->Z);
+		FVector spawnPos = FVector(playerPos->X + (((_scaleX * 100) * _goingRight)*_whipDirection), playerPos->Y - _whipLower, playerPos->Z);
 		_currentMultiAttack++;
+		_whipDirection *= -1.0f;
+		_whipLower -= 50.0f;
 		SpawnProjectile(spawnPos, FVector::Zero());
 		if (_currentMultiAttack >= _multiAttackMax) {
 			_currentMultiAttack = 0;
 			_multiAttacking = false;
+			_whipDirection = 1.0f;
+			_whipLower = 0.0f;
 		}
 		return;
 	}
@@ -77,4 +83,23 @@ void AWhipAttack::SetGoingRight(bool isRight)
 		_goingRight = isRight;
 	}
 	_goingRight = -1.0f;
+}
+
+void AWhipAttack::CheckEnemyCollision()
+{
+	for (int i = 0; i < _projectileCount; i++)
+	{
+		_CombatRadio->SwarmTakeAOEDamage(_ProjectilePosition[i], _hitDistanceSquared, _hitDistanceSquaredY, baseDamage * _baseDamageModifier);
+	}
+}
+
+bool AWhipAttack::Upgrade(UUpgradeDefinition* upgrade)
+{
+	if (!upgrade->weaponTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Weapons.Whip")))) { return false; }
+	if (!Super::Upgrade(upgrade)) { return false; }
+	_multiAttackMax += upgrade->AddAttacks;
+	_multiAttackDelay = FMath::Max(0.1f, _multiAttackDelay - upgrade->AttackSpeedChange);
+	_AttackSpeed = FMath::Max(0.3f, _AttackSpeed - upgrade->AttackSpeedChange);
+	_baseDamageModifier *= upgrade->DamageMultiplier;
+	return false;
 }

@@ -36,4 +36,7 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Modifiers")
 	float AreaChange;
+
+	UPROPERTY(EditAnywhere, Category = "Modifiers")
+	int AddAttacks;
 };

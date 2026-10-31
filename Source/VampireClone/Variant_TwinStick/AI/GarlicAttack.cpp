@@ -49,7 +49,7 @@ void AGarlicAttack::CheckEnemyCollision()
 {
 	for (int i = 0; i < _projectileCount; i++)
 	{
-		_CombatRadio->SwarmTakeAOEDamage(_ProjectilePosition[i], _hitDistanceSquared, baseDamage * _baseDamageModifier);
+		_CombatRadio->SwarmTakeAOEDamage(_ProjectilePosition[i], _hitDistanceSquared, _hitDistanceSquared, baseDamage * _baseDamageModifier);
 	}
 }
 

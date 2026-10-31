@@ -23,6 +23,9 @@ protected:
 	virtual void MoveProjectiles(float DeltaTime) override;
 	virtual int SpawnProjectile(FVector Location, FVector Direction) override;
 	void SetGoingRight(bool isRight);
+	virtual void CheckEnemyCollision() override;
+public:
+	virtual bool Upgrade(UUpgradeDefinition* upgrade) override;
 
 private:
 	float _multiAttackDelay = 0.5f;
@@ -31,7 +34,11 @@ private:
 	int _multiAttackMax = 1;
 	int _currentMultiAttack = 0;
 
+	float _hitDistanceSquaredY = 0.0f;
+
 	TArray<FVector> _ProjectilePlayerOffset;
 
 	float _goingRight = 1.0f;
+	float _whipDirection = 1.0f;
+	float _whipLower = 0.0f;
 };
