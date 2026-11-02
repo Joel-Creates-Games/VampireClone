@@ -133,9 +133,9 @@ void AWeaponController::CheckEnemyCollision()
 		if (closestEnemyIndex == -1) { continue; }
 		FVector* enemyPos = _CombatRadio->GetSwarmEnemyPosition(closestEnemyIndex);
 		FVector* enemyScale = _CombatRadio->GetSwarmEnemyScale(closestEnemyIndex);
-		float enemySize = FMath::Square(enemyScale->X * 50);
+		float totalRadius = FMath::Square((enemyScale->X * 50) + (_scaleX * 50));
 		float distance = FVector::DistSquared(_ProjectilePosition[i], *enemyPos);
-		if (distance - enemySize < _hitDistanceSquared) {
+		if (distance< totalRadius) {
 			KillProjectile(i);
 			_CombatRadio->SwarmTakeDamage(closestEnemyIndex, baseDamage * _baseDamageModifier);
 		}

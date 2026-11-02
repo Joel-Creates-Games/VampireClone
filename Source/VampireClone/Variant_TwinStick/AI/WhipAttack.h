@@ -22,8 +22,10 @@ protected:
 	virtual void Behaviour(float DeltaTime) override;
 	virtual void MoveProjectiles(float DeltaTime) override;
 	virtual int SpawnProjectile(FVector Location, FVector Direction) override;
-	void SetGoingRight(bool isRight);
 	virtual void CheckEnemyCollision() override;
+
+	UFUNCTION()
+	void SetGoingRight(bool isRight);
 public:
 	virtual bool Upgrade(UUpgradeDefinition* upgrade) override;
 

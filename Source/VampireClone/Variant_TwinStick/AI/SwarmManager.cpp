@@ -148,9 +148,9 @@ void ASwarmManager::TakeAOEDamage(const FVector& center, float radiusX, float ra
 		if (!_isAlive[i]) { continue; }
 		//float distance = FVector::DistSquared(_EnemyPosition[i], center);
 		FVector relativeToPlayer = FVector(_EnemyPosition[i].X - center.X, _EnemyPosition[i].Y - center.Y, 0);
-		float bounds = FMath::Square(_scale * 50);
-		float ellipse = (FMath::Square(relativeToPlayer.X) / FMath::Square(radiusX+bounds)) +
-			(FMath::Square(relativeToPlayer.Y) / FMath::Square(radiusY+bounds));
+		float bounds = _scale * 50;
+		float ellipse = (FMath::Square(relativeToPlayer.X) / (radiusX + FMath::Square(bounds))) +
+						(FMath::Square(relativeToPlayer.Y) / (radiusY + FMath::Square(bounds)));
 		if (ellipse >= 1) { continue; }
 		TakeDamage(i, damage);
 	}
@@ -165,12 +165,15 @@ void ASwarmManager::Tick(float DeltaTime)
 	_spawnTimer += DeltaTime;
 	_spawnSpeedUpTimer += DeltaTime;
 	if (_spawnTimer >= SpawnTime) {
-		SpawnEnemy(SetSpawnLocation());
+		for (int i = 0; i < _SpawnCount; i++)
+		{
+			SpawnEnemy(SetSpawnLocation());
+		}
 		_spawnTimer = 0.0f;
 		if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("spawned")));
 	}
 	if (_spawnSpeedUpTimer >= SpawnSpeedup) {
-		SpawnTime = FMath::Max(0.3f, SpawnTime - 0.1f);
+		SpawnTime = FMath::Max(0.01f, SpawnTime - 0.1f);
 		_spawnSpeedUpTimer = 0;
 	}
 }

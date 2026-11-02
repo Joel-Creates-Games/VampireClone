@@ -15,9 +15,7 @@ class UCombatMessageSubsystem : public UWorldSubsystem
 	GENERATED_BODY()
 
 public:
-	UPROPERTY()
 	FOnPlayerHitSigniture OnPlayerHit;
-	UPROPERTY()
 	FOnPlayerMoveRight OnPlayerMoveRight;
 
 public:

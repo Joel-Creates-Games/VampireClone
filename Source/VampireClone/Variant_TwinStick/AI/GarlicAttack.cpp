@@ -59,6 +59,7 @@ bool AGarlicAttack::Upgrade(UUpgradeDefinition* upgrade)
 	if (!Super::Upgrade(upgrade)) { return false; }
 	_AttackSpeed = FMath::Max(0.3f, _AttackSpeed - upgrade->AttackSpeedChange);
 	_scaleX *= upgrade->AreaChange;
+	_scaleY *= upgrade->AreaChange;
 	_hitDistanceSquared = FMath::Square(_scaleX * 50.0f);
 	_baseDamageModifier *= upgrade->DamageMultiplier;
 	return false;

@@ -166,8 +166,9 @@ void ATwinStickCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 void ATwinStickCharacter::Move(const FInputActionValue& Value)
 {
 	// save the input vector
+
 	FVector2D InputVector = Value.Get<FVector2D>();
-	_CombatRadio->OnPlayerMoveRight.Broadcast(InputVector.X > 0.1f);
+	_CombatRadio->OnPlayerMoveRight.Broadcast(InputVector.Y > 0.1f);
 
 	// route the input
 	DoMove(InputVector.X, InputVector.Y);

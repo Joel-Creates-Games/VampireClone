@@ -10,13 +10,16 @@ AWhipAttack::AWhipAttack()
 {
 }
 
-void  AWhipAttack::Setup()
+void AWhipAttack::Setup()
 {
 	_projectileCount = 10;
-	_scaleX = 4.0f;
-	_scaleY = 2.0f;
+	_scaleX = 3.0f;
+	_scaleY = 6.0f;
 	_scaleZ = 1.0f;
+	Lifetime = 0.1f;
+	//_isEquipped = true;
 	Super::Setup();
+
 	if (_CombatRadio)
 	{
 		_CombatRadio->OnPlayerMoveRight.AddDynamic(this, &AWhipAttack::SetGoingRight);
@@ -36,16 +39,17 @@ void AWhipAttack::Behaviour(float DeltaTime)
 		_currentMultiAttackSpeed += DeltaTime;
 		if (_currentMultiAttackSpeed < _multiAttackDelay) { return; }
 		FVector* playerPos = _CombatRadio->GetPlayerPosition();
-		FVector spawnPos = FVector(playerPos->X + (((_scaleX * 100) * _goingRight)*_whipDirection), playerPos->Y - _whipLower, playerPos->Z);
+		FVector spawnPos = FVector(playerPos->X - _whipLower, playerPos->Y + (((_scaleY * 50) * _goingRight) * _whipDirection), playerPos->Z);
 		_currentMultiAttack++;
 		_whipDirection *= -1.0f;
 		_whipLower -= 50.0f;
+		_currentMultiAttackSpeed = 0.0f;
 		SpawnProjectile(spawnPos, FVector::Zero());
 		if (_currentMultiAttack >= _multiAttackMax) {
-			_currentMultiAttack = 0;
 			_multiAttacking = false;
 			_whipDirection = 1.0f;
 			_whipLower = 0.0f;
+			_currentMultiAttack = 0;
 		}
 		return;
 	}
@@ -54,6 +58,7 @@ void AWhipAttack::Behaviour(float DeltaTime)
 	{
 		_multiAttacking = true;
 		_currentMultiAttackSpeed = _multiAttackDelay;
+		_CurrentSpeed = 0;
 	}
 }
 
@@ -64,6 +69,10 @@ void AWhipAttack::MoveProjectiles(float DeltaTime)
 	{
 		if (!_alive[i]) { continue; }
 		_ProjectilePosition[i] = FVector(playerPos->X + _ProjectilePlayerOffset[i].X, playerPos->Y + _ProjectilePlayerOffset[i].Y, playerPos->Z + _ProjectilePlayerOffset[i].Z);
+		_timeLeft[i] += DeltaTime;
+		if (_timeLeft[i] >= Lifetime) {
+			KillProjectile(i);
+		}
 	}
 }
 
@@ -79,8 +88,11 @@ int AWhipAttack::SpawnProjectile(FVector Location, FVector Direction)
 
 void AWhipAttack::SetGoingRight(bool isRight)
 {
+	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("Actual direction: %d"), isRight));
+
 	if (isRight) {
-		_goingRight = isRight;
+		_goingRight = 1.0f;
+		return;
 	}
 	_goingRight = -1.0f;
 }
@@ -89,6 +101,7 @@ void AWhipAttack::CheckEnemyCollision()
 {
 	for (int i = 0; i < _projectileCount; i++)
 	{
+		if (!_alive[i]) { continue; }
 		_CombatRadio->SwarmTakeAOEDamage(_ProjectilePosition[i], _hitDistanceSquared, _hitDistanceSquaredY, baseDamage * _baseDamageModifier);
 	}
 }

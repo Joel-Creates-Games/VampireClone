@@ -33,14 +33,14 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Enemy Settings")
 	float SpawnTime = 2.0f;
 
-	float SpawnSpeedup = 15.0f;
+	float SpawnSpeedup = 5.0f;
 
 private:
 	class UProgressionMessageSubsystem* ProgressRadio = nullptr;
 	class UCombatMessageSubsystem* CombatRadio = nullptr;
 
 	TArray<int> _deadEnemies;
-	int _enemyCount = 10;
+	int _enemyCount = 10000;
 	TArray<FVector> _EnemyDirection;
 	TArray<FVector> _EnemyPosition;
 	TArray<FVector> _EnemyVelocity;
@@ -57,6 +57,8 @@ private:
 
 	float _spawnTimer = 0.0f;
 	float _spawnSpeedUpTimer = 0.0f;
+
+	int _SpawnCount = 20;
 
 
 protected:
