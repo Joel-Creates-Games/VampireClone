@@ -29,6 +29,7 @@ void ASwarmManager::BeginPlay()
 void ASwarmManager::Setup()
 {
 	UWorld* world = GetWorld();
+	SetupSpatialGrid();
 	if (!ensure(world)) return;
 	//APlayerController* playerController = world->GetFirstPlayerController();
 	//if (!ensure(playerController)) return;
@@ -161,6 +162,7 @@ void ASwarmManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	ControlEnemy(DeltaTime);
+	UpdateGrid();
 	DrawEnemyMesh();
 	_spawnTimer += DeltaTime;
 	_spawnSpeedUpTimer += DeltaTime;
@@ -187,6 +189,42 @@ void ASwarmManager::SpawnEnemy(const FVector& SpawnLocation)
 	_EnemyPosition[nextDeadEnemy] = SpawnLocation;
 }
 
+int ASwarmManager::CalculateHitZone(const FVector& Location)
+{
+	int gridX = Location.X / zoneWidth;
+	int gridY = Location.Y / zoneHeight;
+
+	int WrappedX = FMath::Abs(gridX) % zoneWidth;
+	int WrappedY = FMath::Abs(gridY) % zoneHeight;
+
+	int BucketIndex = WrappedX + (WrappedY * zoneWidth);
+	return BucketIndex;
+}
+
+void ASwarmManager::UpdateGrid()
+{
+	for (int i = 0; i < _enemyCount; i++)
+	{
+		spatialGrid[i].Empty();
+	}
+	for (int i = 0; i < _enemyCount; i++)
+	{
+		if (!_isAlive[i]) { continue; }
+		int BucketIndex = CalculateHitZone(_EnemyPosition[i]);
+		spatialGrid[BucketIndex].Push(i);
+	}
+}
+
+void ASwarmManager::SetupSpatialGrid()
+{
+	spatialGrid.Reserve(hitZoneDepth * hitZoneDepth);
+	for (int i = 0; i < hitZoneDepth * hitZoneDepth; i++)
+	{
+		spatialGrid.Push(TArray<int>());
+		spatialGrid[i].Reserve(50);
+	}
+}
+
 FVector ASwarmManager::SetSpawnLocation()
 {
 	FVector* playerPos = CombatRadio->GetPlayerPosition();
@@ -198,9 +236,10 @@ FVector ASwarmManager::SetSpawnLocation()
 	return SpawnLocation;
 }
 
-int ASwarmManager::GetClostestEnemyIndex(const FVector& Location)
+int ASwarmManager::GetClosestEnemyIndex(const FVector& Location)
 {
-	int closestEnemyIndex = -1;
+	int closestEnemyIndex = CheckClosestGrid(Location);
+	if (closestEnemyIndex != -1) { return closestEnemyIndex; }
 	int minDistance = INT_MAX;
 	for (int i = 0; i < _enemyCount; i++)
 	{
@@ -210,6 +249,26 @@ int ASwarmManager::GetClostestEnemyIndex(const FVector& Location)
 		{
 			minDistance = distance;
 			closestEnemyIndex = i;
+		}
+	}
+	return closestEnemyIndex;
+}
+
+int ASwarmManager::CheckClosestGrid(const FVector& Location)
+{
+	int index = CalculateHitZone(Location);
+	if (spatialGrid[index].Num() == 0) { return -1; }
+	int closestEnemyIndex = -1;
+	int minDistance = INT_MAX;
+	for (int i = 0; i < spatialGrid[index].Num(); i++)
+	{
+		int enemyIndex = spatialGrid[index][i];
+		if (!_isAlive[enemyIndex]) { continue; }
+		int distance = FVector::DistSquared(_EnemyPosition[enemyIndex], Location);
+		if (distance < minDistance)
+		{
+			minDistance = distance;
+			closestEnemyIndex = enemyIndex;
 		}
 	}
 	return closestEnemyIndex;

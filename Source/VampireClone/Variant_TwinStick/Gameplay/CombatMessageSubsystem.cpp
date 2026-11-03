@@ -30,7 +30,7 @@ void UCombatMessageSubsystem::SetTwinStickCharacter(ATwinStickCharacter* player)
 int UCombatMessageSubsystem::GetClosestSwarm(FVector location)
 {
 	if (_swarm == nullptr) { return -1; }
-	return _swarm->GetClostestEnemyIndex(location);
+	return _swarm->GetClosestEnemyIndex(location);
 }
 
 void UCombatMessageSubsystem::SwarmTakeDamage(int index, float damage)

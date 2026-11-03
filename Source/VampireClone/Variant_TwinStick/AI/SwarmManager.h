@@ -45,6 +45,7 @@ private:
 	TArray<FVector> _EnemyPosition;
 	TArray<FVector> _EnemyVelocity;
 	TArray<FVector> _EnemyScale;
+	TArray<int> _EnemyBucketIndex;
 	TArray<float> _speed;
 	TArray<float> _damage;
 	TArray<float> _health;
@@ -80,9 +81,26 @@ public:
 	FVector SetSpawnLocation();
 	FVector* GetEnemyPosition(const int EnemyIndex);
 	FVector* GetEnemyScale(int EnemyIndex);
-	int GetClostestEnemyIndex(const FVector& Location);
+	int GetClosestEnemyIndex(const FVector& Location);
 	TArray<FVector>* GetEnemyPositions();
 	void TakeDamage(const int Enemy, const float Damage);
 	void TakeAOEDamage(const FVector& center, float radiusX, float radiusY, float damage);
 	void SpawnEnemy(const FVector& SpawnLocation);
+
+/// <summary>
+/// Collision logic for spatial hashing, we will check for collisions between enemies and the player or attacks
+/// </summary>
+private:
+	TArray<int> hitZonesX;
+	TArray<int> hitZonesY;
+	TArray<TArray<int>> spatialGrid;
+	int hitZoneDepth = 100;
+	int zoneWidth = 20;
+	int zoneHeight = 20;
+
+private:
+	int CalculateHitZone(const FVector& Location);
+	void UpdateGrid();
+	int CheckClosestGrid(const FVector& Location);
+	void SetupSpatialGrid();
 };
