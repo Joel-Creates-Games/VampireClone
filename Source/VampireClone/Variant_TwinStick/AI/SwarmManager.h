@@ -40,6 +40,7 @@ private:
 	class UCombatMessageSubsystem* CombatRadio = nullptr;
 
 	TArray<int> _deadEnemies;
+	TArray<int> _aliveEnemies;
 	int _enemyCount = 10000;
 	TArray<FVector> _EnemyDirection;
 	TArray<FVector> _EnemyPosition;
@@ -49,7 +50,6 @@ private:
 	TArray<float> _speed;
 	TArray<float> _damage;
 	TArray<float> _health;
-	TArray<bool> _isAlive;
 
 	/// <summary>
 	/// update this later for different enemies
@@ -73,7 +73,7 @@ protected:
 
 	int GetNextDeadEnemy();
 	
-	void KillEnemy(const int Enemy);
+	void KillEnemy(const int Enemy, const int Index);
 
 public:	
 	// Called every frame
@@ -103,4 +103,5 @@ private:
 	void UpdateGrid();
 	int CheckClosestGrid(const FVector& Location);
 	void SetupSpatialGrid();
+	void CleanupTickFrame();
 };
