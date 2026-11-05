@@ -158,7 +158,7 @@ void AExpDrops::SpawnExp(const FVector& SpawnLocation)
 {
 	int index = GetNextExp();
 	if (index == -1) { return; }
-	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("exp tried spawn")));
+	//if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("exp tried spawn")));
 	_ExpPosition[index] = SpawnLocation;
 	_ExpVelocity[index] = FVector::ZeroVector;
 	_currentSpeed[index] = 0.0f;

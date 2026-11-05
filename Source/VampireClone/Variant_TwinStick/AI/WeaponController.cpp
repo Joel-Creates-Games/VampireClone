@@ -12,9 +12,9 @@ AWeaponController::AWeaponController()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	HISMComponent = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HISMComponent"));
-	RootComponent = HISMComponent;
-	HISMComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	ISMComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("ISMComponent"));
+	RootComponent = ISMComponent;
+	ISMComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void AWeaponController::Setup()
@@ -56,9 +56,9 @@ void AWeaponController::Setup()
 
 		_deadProjectiles.Push(i);
 	}
-	HISMComponent->AddInstances(InstanceTransforms, false);
+	ISMComponent->AddInstances(InstanceTransforms, false);
 
-	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Yellow, FString::Printf(TEXT("Actual Spawns: %d"), HISMComponent->GetInstanceCount()));
+	//if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Yellow, FString::Printf(TEXT("Actual Spawns: %d"), ISMComponent->GetInstanceCount()));
 }
 
 void AWeaponController::MoveProjectiles(float DeltaTime)
@@ -79,11 +79,11 @@ void AWeaponController::DrawProjectileMesh()
 		{
 			ProjectileTransform.SetLocation(FVector(0, 0, -999999.0f));
 		}
-		HISMComponent->UpdateInstanceTransform(i, ProjectileTransform, true, false, false);
-		//if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("Actual Spawns: %d"), HISMComponent->GetInstanceCount()));
+		ISMComponent->UpdateInstanceTransform(i, ProjectileTransform, true, false, false);
+		//if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("Actual Spawns: %d"), ISMComponent->GetInstanceCount()));
 	}
-	HISMComponent->MarkRenderStateDirty();
-	HISMComponent->UpdateBounds();
+	ISMComponent->MarkRenderStateDirty();
+	ISMComponent->UpdateBounds();
 }
 
 int AWeaponController::SpawnProjectile(FVector Location, FVector Direction)
@@ -102,7 +102,7 @@ bool AWeaponController::Upgrade(UUpgradeDefinition* upgrade)
 {
 	if (!_isEquipped) {
 		_isEquipped = true;
-		if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("Actual Spawns: %d"), HISMComponent->GetInstanceCount()));
+		//if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("Actual Spawns: %d"), HISMComponent->GetInstanceCount()));
 		return false;
 	}
 	return true;
@@ -152,12 +152,17 @@ void AWeaponController::BeginPlay()
 // Called every frame
 void AWeaponController::Tick(float DeltaTime)
 {
+	double startTime = FPlatformTime::Seconds();
 	if (!_isEquipped) { return; }
 	Super::Tick(DeltaTime);
 	MoveProjectiles(DeltaTime);
 	DrawProjectileMesh();
 	CheckEnemyCollision();
 	Behaviour(DeltaTime);
+	double endTime = FPlatformTime::Seconds();
+	if (endTime - startTime > 0.16) {
+		UE_LOG(LogTemp, Error, TEXT("SPIKE CAUGHT: weapon Loop took %f ms"), (endTime - startTime) * 1000.0);
+	}
 }
 
 int AWeaponController::GetNextProjectile()

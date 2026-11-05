@@ -11,9 +11,9 @@ ASwarmManager::ASwarmManager()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	HISMComponent = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HISMComponent"));
-	RootComponent = HISMComponent;
-	HISMComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	ISMComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("ISMComponent"));
+	RootComponent = ISMComponent;
+	ISMComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 // Called when the game starts or when spawned
@@ -22,7 +22,7 @@ void ASwarmManager::BeginPlay()
 	Super::BeginPlay();
 	Setup();
 
-	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, TEXT("Setup Finished!"));
+	//if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, TEXT("Setup Finished!"));
 }
 
 //DOD setup of enemies, cache player pawn, and initialize enemy properties
@@ -46,9 +46,8 @@ void ASwarmManager::Setup()
 
 	FTransform HiddenTransform;
 	HiddenTransform.SetLocation(FVector(0, 0, -999999.0f));
-
-	TArray<FTransform> InstanceTransforms;
-	InstanceTransforms.Init(HiddenTransform, _enemyCount);
+	_InstanceTransforms.Reserve(_enemyCount);
+	_InstanceTransforms.Init(HiddenTransform, _enemyCount);
 
 	_EnemyDirection.Reserve(_enemyCount);
 	_EnemyPosition.Reserve(_enemyCount);
@@ -71,8 +70,9 @@ void ASwarmManager::Setup()
 		_health.Push(BaseHealth);
 		_deadEnemies.Push(i);
 	}
-	HISMComponent->AddInstances(InstanceTransforms, false);
-	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("Actual Spawns: %d"), HISMComponent->GetInstanceCount()));
+	ISMComponent->AddInstances(_InstanceTransforms, false);
+	ISMComponent->SetBoundsScale(10000.0f);
+	//if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("Actual Spawns: %d"), ISMComponent->GetInstanceCount()));
 }
 
 void ASwarmManager::ControlEnemy(float DeltaTime)
@@ -99,32 +99,28 @@ void ASwarmManager::DrawEnemyMesh()
 	for (int i = 0; i < size; i++)
 	{
 		index = _aliveEnemies[i];
-		FTransform EnemyTransform;
-		EnemyTransform.SetLocation(_EnemyPosition[index]);
-		HISMComponent->UpdateInstanceTransform(index, EnemyTransform, true, false, false);
+		_InstanceTransforms[index].SetLocation(_EnemyPosition[index]);
 	}
-	HISMComponent->MarkRenderStateDirty();
-	HISMComponent->UpdateBounds();
+	ISMComponent->BatchUpdateInstancesTransforms(0, _InstanceTransforms, true, true, true);
 }
 
 int ASwarmManager::GetNextDeadEnemy() 
 {
 	if (_deadEnemies.Num() == 0) { 
-		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("None Left: %d"), HISMComponent->GetInstanceCount()));
+		//GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("None Left: %d"), HISMComponent->GetInstanceCount()));
 		return -1; }
-	GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("Some Left: %d"), HISMComponent->GetInstanceCount()));
+	//GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("Some Left: %d"), HISMComponent->GetInstanceCount()));
 	int nextDeadEnemy = _deadEnemies.Pop();
 	return nextDeadEnemy;
 }
 
 void ASwarmManager::KillEnemy(const int Enemy, const int Index)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(Swarm_KillEnemy);
 	_deadEnemies.Push(Enemy);
 	_aliveEnemies.RemoveAtSwap(Index);
 	ProgressRadio->ExpDropsSpawnExp(&_EnemyPosition[Enemy]);
-	FTransform EnemyTransform;
-	EnemyTransform.SetLocation(FVector(0, 0, -999999.0f));
-	HISMComponent->UpdateInstanceTransform(Enemy, EnemyTransform, true, false, false);
+	_InstanceTransforms[Enemy].SetLocation(FVector(0, 0, -999999.0f));
 }
 
 void ASwarmManager::TakeDamage(const int Enemy, const float Damage)
@@ -151,6 +147,8 @@ void ASwarmManager::TakeAOEDamage(const FVector& center, float radiusX, float ra
 // Called every frame
 void ASwarmManager::Tick(float DeltaTime)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(Swarm_Tick);
+	double startTime = FPlatformTime::Seconds();
 	Super::Tick(DeltaTime);
 	ControlEnemy(DeltaTime);
 	UpdateGrid();
@@ -164,16 +162,21 @@ void ASwarmManager::Tick(float DeltaTime)
 			SpawnEnemy(SetSpawnLocation());
 		}
 		_spawnTimer = 0.0f;
-		if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("spawned")));
+		//if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("spawned")));
 	}
 	if (_spawnSpeedUpTimer >= SpawnSpeedup) {
 		SpawnTime = FMath::Max(0.01f, SpawnTime - 0.1f);
 		_spawnSpeedUpTimer = 0;
 	}
+	double endTime = FPlatformTime::Seconds();
+	if (endTime - startTime > 0.16) {
+		UE_LOG(LogTemp, Error, TEXT("SPIKE CAUGHT: swarm Loop took %f ms"), (endTime - startTime) * 1000.0);
+	}
 }
 
 void ASwarmManager::SpawnEnemy(const FVector& SpawnLocation)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(Swarm_SpawnEnemy);
 	int nextDeadEnemy = GetNextDeadEnemy();
 	if (nextDeadEnemy == -1) { return; }
 	_health[nextDeadEnemy] = BaseHealth;
@@ -195,6 +198,7 @@ int ASwarmManager::CalculateHitZone(const FVector& Location)
 
 void ASwarmManager::UpdateGrid()
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(Swarm_UpdateGrid);
 	for (int i = 0; i < spatialGrid.Num(); i++)
 	{
 		spatialGrid[i].Reset();
@@ -259,6 +263,7 @@ FVector ASwarmManager::SetSpawnLocation()
 
 int ASwarmManager::GetClosestEnemyIndex(const FVector& Location)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(Swarm_GetClosestEnemyIndex);
 	int closestEnemyIndex = CheckClosestGrid(Location);
 	if (closestEnemyIndex != -1) { return closestEnemyIndex; }
 	int minDistance = INT_MAX;

@@ -88,7 +88,7 @@ int AWhipAttack::SpawnProjectile(FVector Location, FVector Direction)
 
 void AWhipAttack::SetGoingRight(bool isRight)
 {
-	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("Actual direction: %d"), isRight));
+	//if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("Actual direction: %d"), isRight));
 
 	if (isRight) {
 		_goingRight = 1.0f;

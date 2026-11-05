@@ -20,7 +20,7 @@ public:
 	//APawn* CachedPlayerPawn = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UHierarchicalInstancedStaticMeshComponent* HISMComponent;
+	UInstancedStaticMeshComponent* ISMComponent;
 
 
 
@@ -33,12 +33,13 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Enemy Settings")
 	float SpawnTime = 2.0f;
 
-	float SpawnSpeedup = 5.0f;
+	float SpawnSpeedup = 2.0f;
 
 private:
 	class UProgressionMessageSubsystem* ProgressRadio = nullptr;
 	class UCombatMessageSubsystem* CombatRadio = nullptr;
 
+	TArray<FTransform> _InstanceTransforms;
 	TArray<int> _deadEnemies;
 	TArray<int> _aliveEnemies;
 	int _enemyCount = 10000;

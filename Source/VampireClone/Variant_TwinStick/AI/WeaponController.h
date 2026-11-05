@@ -18,7 +18,7 @@ public:
 	AWeaponController();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UHierarchicalInstancedStaticMeshComponent* HISMComponent;
+	UInstancedStaticMeshComponent* ISMComponent;
 
 	int _projectileCount = 100;
 	bool _isEquipped = false;
