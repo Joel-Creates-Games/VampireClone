@@ -38,36 +38,30 @@ void AExpDrops::Setup()
 	}
 	_CombatRadio = GetWorld()->GetSubsystem<UCombatMessageSubsystem>();
 
-	_deadExp.Reserve(_expCount);
+	//_deadExp.Reserve(_expCount);
 
 	FTransform HiddenTransform;
 	HiddenTransform.SetLocation(FVector(0, 0, -1000.0f));
 
-	TArray<FTransform> InstanceTransforms;
-	InstanceTransforms.Init(HiddenTransform, _expCount);
+	//TArray<FTransform> InstanceTransforms;
+	_InstanceTransforms.Init(HiddenTransform, _expCount);
 
-	for(int i = 0; i < _expCount; i++)
-	{
-		_ExpDirection[i] = FVector(0, 0, 0);
-		_ExpPosition[i] = FVector(0, 0, 0);
-		_ExpVelocity[i] = FVector(0, 0, 0);
+	_ExpDirection.Init(FVector(0, 0, 0), _expCount);
+	_ExpPosition.Init(FVector(0, 0, 0), _expCount);
+	_ExpVelocity.Init(FVector(0, 0, 0), _expCount);
+	_timeLeft.Init(0.0f, _expCount);
+	_currentSpeed.Init(0.0f, _expCount);
 
-		_currentSpeed[i] = 0.0f;
-		_timeLeft[i] = 0.0f;
-		_alive[i] = false;
-
-		_deadExp.Push(i);
-	}
-	ISMComponent->AddInstances(InstanceTransforms, false);
+	ISMComponent->AddInstances(_InstanceTransforms, false);
 }
 
 void AExpDrops::MoveExp(float DeltaTime)
 {
 	if (!_CombatRadio) { return; }
 	FVector* playerPos = _CombatRadio->GetPlayerPosition();
-	for(int i = 0; i < _expCount; i++)
+	for(int i = 0; i < _aliveEXPCount; i++)
 	{
-		if (!_alive[i]) { continue;}
+		//if (!_alive[i]) { continue;}
 		float distanceToPlayer = FVector::DistSquared(_ExpPosition[i], *playerPos);
 		_timeLeft[i] -= DeltaTime;
 		if (_timeLeft[i] <= 0.0f)
@@ -95,14 +89,18 @@ float AExpDrops::CheckPlayerCollision()
 	float totalGain = 0;
 	UProgressionMessageSubsystem* ProgressionRadio = GetWorld()->GetSubsystem<UProgressionMessageSubsystem>();
 	float fullValue = _expValue * _expValueModifier;
-	for (int i = 0; i < _expCount; i++)
+	for (int i = 0; i < _aliveEXPCount;)
 	{
-		if (!_alive[i]) { continue; }
+		//if (!_alive[i]) { continue; }
 		if (FVector::DistSquared(_ExpPosition[i], *playerPos) < _hitDistance)
 		{
 			ProgressionRadio->OnExperienceGain.Broadcast(fullValue);
 			KillExp(i);
 			totalGain += GetExpValue();
+		}
+		else
+		{
+			i++;
 		}
 	}
 	return totalGain;
@@ -110,30 +108,45 @@ float AExpDrops::CheckPlayerCollision()
 
 void AExpDrops::KillExp(const int Exp)
 {
-	if (!_alive[Exp]) { return; }
-	_alive[Exp] = false;
-	_deadExp.Push(Exp);
+	//if (!_alive[Exp]) { return; }
+	//_alive[Exp] = false;
+	//_deadExp.Push(Exp);
+	SwapSOA(Exp, _aliveEXPCount-1);
+	_InstanceTransforms[_aliveEXPCount-1].SetLocation(FVector(0, 0, -999999.0f));
+	_aliveEXPCount--;
 }
 
 void AExpDrops::DrawExpMesh()
 {
-	for (int i = 0; i < _expCount; i++)
+	for (int i = 0; i < _aliveEXPCount; i++)
 	{
-		FTransform ExpTransform;
-		if (_alive[i]) {
-			ExpTransform.SetLocation(_ExpPosition[i]);
-		}
-		else
-		{
-			FVector HiddenPos = _ExpPosition[i];
-			HiddenPos.Z = -500.0f; // Hidden underground
-			ExpTransform.SetLocation(HiddenPos);
-		}
-
-		ISMComponent->UpdateInstanceTransform(i, ExpTransform, true, false, true);
+		//FTransform ExpTransform;
+		//if (_alive[i]) {
+			//ExpTransform.SetLocation(_ExpPosition[i]);
+		//}
+		//else
+		//{
+			//FVector HiddenPos = _ExpPosition[i];
+			//HiddenPos.Z = -500.0f; // Hidden underground
+			//ExpTransform.SetLocation(HiddenPos);
+		//}
+		_InstanceTransforms[i].SetLocation(_ExpPosition[i]);
 	}
-	ISMComponent->MarkRenderStateDirty();
-	ISMComponent->UpdateBounds();
+	ISMComponent->BatchUpdateInstancesTransforms(0, _InstanceTransforms, true, false, true);
+}
+
+void AExpDrops::SwapSOA(int indexA, int indexB)
+{
+	_ExpPosition[indexA] = _ExpPosition[indexB];
+	_ExpDirection[indexA] = _ExpDirection[indexB];
+	_ExpVelocity[indexA] = _ExpVelocity[indexB];
+	_timeLeft[indexA] = _timeLeft[indexB];
+	_currentSpeed[indexA] = _currentSpeed[indexB];
+}
+
+void AExpDrops::CleanupExp()
+{
+	CheckPlayerCollision();
 }
 
 // Called every frame
@@ -142,16 +155,17 @@ void AExpDrops::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	MoveExp(DeltaTime);
 	DrawExpMesh();
-	CheckPlayerCollision();
+	CleanupExp();
 }
 
 int AExpDrops::GetNextExp()
 {
-	if (_deadExp.Num() == 0) { return -1; }
-	int nextExp = _deadExp.Pop();
-	_alive[nextExp] = true;
-	_timeLeft[nextExp] = 10.0f;
-	return nextExp;
+	if (_aliveEXPCount == _expCount) { return -1; }
+	//int nextExp = _deadExp.Pop();
+	//_alive[nextExp] = true;
+	_timeLeft[_aliveEXPCount] = 10.0f;
+	_aliveEXPCount++;
+	return _aliveEXPCount -1;
 }
 
 void AExpDrops::SpawnExp(const FVector& SpawnLocation)

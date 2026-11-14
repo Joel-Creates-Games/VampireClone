@@ -39,18 +39,22 @@ private:
 	class UProgressionMessageSubsystem* ProgressRadio = nullptr;
 	class UCombatMessageSubsystem* CombatRadio = nullptr;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UInstancedStaticMeshComponent* ISMComponent;
+
+	TArray<uint8> _cleanupFlags;
+
 	TArray<FTransform> _InstanceTransforms;
-	TArray<int> _deadEnemies;
-	TArray<int> _aliveEnemies;
-	int _enemyCount = 10000;
 	TArray<FVector> _EnemyDirection;
 	TArray<FVector> _EnemyPosition;
 	TArray<FVector> _EnemyVelocity;
 	TArray<FVector> _EnemyScale;
-	TArray<int> _EnemyBucketIndex;
 	TArray<float> _speed;
 	TArray<float> _damage;
 	TArray<float> _health;
+
+	int _aliveEnemiesCount = 0;
+	int _enemyCount = 10000;
 
 	/// <summary>
 	/// update this later for different enemies
@@ -74,7 +78,7 @@ protected:
 
 	int GetNextDeadEnemy();
 	
-	void KillEnemy(const int Enemy, const int Index);
+	void KillEnemy(const int Index);
 
 public:	
 	// Called every frame
@@ -84,7 +88,7 @@ public:
 	FVector* GetEnemyScale(int EnemyIndex);
 	int GetClosestEnemyIndex(const FVector& Location);
 	TArray<FVector>* GetEnemyPositions();
-	void TakeDamage(const int Enemy, const float Damage);
+	void TakeDamage(const int Index, const float Damage);
 	void TakeAOEDamage(const FVector& center, float radiusX, float radiusY, float damage);
 	void SpawnEnemy(const FVector& SpawnLocation);
 
@@ -105,4 +109,5 @@ private:
 	int CheckClosestGrid(const FVector& Location);
 	void SetupSpatialGrid();
 	void CleanupTickFrame();
+	void SwapSOA(int indexA, int indexB);
 };

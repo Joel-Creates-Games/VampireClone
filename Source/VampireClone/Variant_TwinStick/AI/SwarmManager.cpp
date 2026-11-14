@@ -36,9 +36,7 @@ void ASwarmManager::Setup()
 	//CachedPlayerPawn = playerController->GetPawn();
 	//if (!ensure(CachedPlayerPawn)) return;
 	ProgressRadio = GetWorld()->GetSubsystem<UProgressionMessageSubsystem>();
-	if (ProgressRadio) {
 
-	}
 	CombatRadio = GetWorld()->GetSubsystem<UCombatMessageSubsystem>();
 	if (CombatRadio) {
 		CombatRadio->SetSwarmManager(this);
@@ -46,30 +44,20 @@ void ASwarmManager::Setup()
 
 	FTransform HiddenTransform;
 	HiddenTransform.SetLocation(FVector(0, 0, -999999.0f));
-	_InstanceTransforms.Reserve(_enemyCount);
 	_InstanceTransforms.Init(HiddenTransform, _enemyCount);
 
-	_EnemyDirection.Reserve(_enemyCount);
-	_EnemyPosition.Reserve(_enemyCount);
-	_EnemyVelocity.Reserve(_enemyCount);
-	_EnemyScale.Reserve(_enemyCount);
-	_speed.Reserve(_enemyCount);
-	_damage.Reserve(_enemyCount);
-	_health.Reserve(_enemyCount);
-	_deadEnemies.Reserve(_enemyCount);
-	_aliveEnemies.Reserve(_enemyCount);
+	_cleanupFlags.Init(0, _enemyCount);
 
-	for (int i = 0; i < _enemyCount; i++)
-	{
-		_EnemyDirection.Push(FVector(0, 0, 0));
-		_EnemyPosition.Push(FVector(0, 0, 0));
-		_EnemyVelocity.Push(FVector(0, 0, 0));
-		_EnemyScale.Push(FVector(_scale, _scale, _scale));
-		_speed.Push(BaseSpeed);
-		_damage.Push(BaseDamage);
-		_health.Push(BaseHealth);
-		_deadEnemies.Push(i);
-	}
+	_EnemyDirection.Init(FVector(0, 0, 0), _enemyCount);
+	_EnemyPosition.Init(FVector(0, 0, 0), _enemyCount);
+	_EnemyVelocity.Init(FVector(0, 0, 0), _enemyCount);
+	_EnemyScale.Init(FVector(_scale, _scale, _scale), _enemyCount);
+	_speed.Init(BaseSpeed, _enemyCount);
+	_damage.Init(BaseDamage, _enemyCount);
+	_health.Init(BaseHealth, _enemyCount);
+	//_deadEnemies.Reserve(_enemyCount);
+	//_aliveEnemies.Reserve(_enemyCount);
+
 	ISMComponent->AddInstances(_InstanceTransforms, false);
 	ISMComponent->SetBoundsScale(10000.0f);
 	//if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("Actual Spawns: %d"), ISMComponent->GetInstanceCount()));
@@ -79,68 +67,71 @@ void ASwarmManager::ControlEnemy(float DeltaTime)
 {
 	FVector* playerPos = CombatRadio->GetPlayerPosition();
 	const float AttackRangeSqrt = 10000.0f;
-	int index = 0;
-	int size = _aliveEnemies.Num();
-	for (int i = 0; i < size; i++)
+	//int index = 0;
+	//int size = _aliveEnemies.Num();
+	for (int i = 0; i < _aliveEnemiesCount; i++)
 	{
-		index = _aliveEnemies[i];
-		FVector EnemyDirection = *playerPos - _EnemyPosition[index];
+		//index = _aliveEnemies[i];
+		FVector EnemyDirection = *playerPos - _EnemyPosition[i];
 		EnemyDirection.Normalize();
-		_EnemyDirection[index] = EnemyDirection;
-		_EnemyVelocity[index] = EnemyDirection * _speed[index];
-		_EnemyPosition[index] += _EnemyVelocity[index] * DeltaTime;
+		_EnemyDirection[i] = EnemyDirection;
+		_EnemyVelocity[i] = EnemyDirection * _speed[i];
+		_EnemyPosition[i] += _EnemyVelocity[i] * DeltaTime;
 	}
 }
 
 void ASwarmManager::DrawEnemyMesh()
 {
-	int index = 0;
-	int size = _aliveEnemies.Num();
-	for (int i = 0; i < size; i++)
+	//int index = 0;
+	//int size = _aliveEnemies.Num();
+	for (int i = 0; i < _aliveEnemiesCount; i++)
 	{
-		index = _aliveEnemies[i];
-		_InstanceTransforms[index].SetLocation(_EnemyPosition[index]);
+		//index = _aliveEnemies[i];
+		_InstanceTransforms[i].SetLocation(_EnemyPosition[i]);
 	}
 	ISMComponent->BatchUpdateInstancesTransforms(0, _InstanceTransforms, true, true, true);
 }
 
 int ASwarmManager::GetNextDeadEnemy() 
 {
-	if (_deadEnemies.Num() == 0) { 
+	if (_aliveEnemiesCount == _enemyCount) {
 		//GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("None Left: %d"), HISMComponent->GetInstanceCount()));
 		return -1; }
 	//GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("Some Left: %d"), HISMComponent->GetInstanceCount()));
-	int nextDeadEnemy = _deadEnemies.Pop();
-	return nextDeadEnemy;
+	_aliveEnemiesCount++;
+	//int nextDeadEnemy = _deadEnemies.Pop();
+	return _aliveEnemiesCount - 1;
 }
 
-void ASwarmManager::KillEnemy(const int Enemy, const int Index)
+void ASwarmManager::KillEnemy(const int Index)
 {
 	TRACE_CPUPROFILER_EVENT_SCOPE(Swarm_KillEnemy);
-	_deadEnemies.Push(Enemy);
-	_aliveEnemies.RemoveAtSwap(Index);
-	ProgressRadio->ExpDropsSpawnExp(&_EnemyPosition[Enemy]);
-	_InstanceTransforms[Enemy].SetLocation(FVector(0, 0, -999999.0f));
+	//_deadEnemies.Push(Enemy);
+	ProgressRadio->ExpDropsSpawnExp(&_EnemyPosition[Index]);
+	SwapSOA(Index, _aliveEnemiesCount-1);
+	_InstanceTransforms[_aliveEnemiesCount-1].SetLocation(FVector(0, 0, -999999.0f));
+	_aliveEnemiesCount--;
+	//_aliveEnemies.RemoveAtSwap(Index);
+	//////swap SOA data for the dead enemy with the last alive enemy
 }
 
-void ASwarmManager::TakeDamage(const int Enemy, const float Damage)
+void ASwarmManager::TakeDamage(const int Index, const float Damage)
 {
-	_health[Enemy] = FMath::Max(0.0f, _health[Enemy] - Damage);
+	_health[Index] = FMath::Max(0.0f, _health[Index] - Damage);
 }
 
 void ASwarmManager::TakeAOEDamage(const FVector& center, float radiusX, float radiusY, float damage)
 {
-	int index = 0;
-	int size = _aliveEnemies.Num();
-	for (int i = 0; i < size; i++)
+	//int index = 0;
+	//int size = _aliveEnemies.Num();
+	for (int i = 0; i < _aliveEnemiesCount; i++)
 	{
-		index = _aliveEnemies[i];
-		//float distance = FVector::DistSquared(_EnemyPosition[index], center);
-		FVector relativeToPlayer = FVector(_EnemyPosition[index].X - center.X, _EnemyPosition[index].Y - center.Y, 0);
+		//index = _aliveEnemies[i];
+		FVector relativeToPlayer = FVector(_EnemyPosition[i].X - center.X, _EnemyPosition[i].Y - center.Y, 0);
 		float bounds = _scale * 50;
 		float ellipse = (FMath::Square(relativeToPlayer.X) / (radiusX + FMath::Square(bounds))) +
 						(FMath::Square(relativeToPlayer.Y) / (radiusY + FMath::Square(bounds)));
-		TakeDamage(index, (damage) * (ellipse < 1.0f));
+		TakeDamage(i, (damage) * (ellipse < 1.0f));
 	}
 }
 
@@ -180,7 +171,7 @@ void ASwarmManager::SpawnEnemy(const FVector& SpawnLocation)
 	int nextDeadEnemy = GetNextDeadEnemy();
 	if (nextDeadEnemy == -1) { return; }
 	_health[nextDeadEnemy] = BaseHealth;
-	_aliveEnemies.Push(nextDeadEnemy);
+	//_aliveEnemies.Push(nextDeadEnemy);
 	_EnemyPosition[nextDeadEnemy] = SpawnLocation;
 }
 
@@ -203,13 +194,13 @@ void ASwarmManager::UpdateGrid()
 	{
 		spatialGrid[i].Reset();
 	}
-	int index = 0;
-	int size = _aliveEnemies.Num();
-	for (int i = 0; i < size; i++)
+	//int index = 0;
+	//int size = _aliveEnemies.Num();
+	for (int i = 0; i < _aliveEnemiesCount; i++)
 	{
-		index = _aliveEnemies[i];
-		int BucketIndex = CalculateHitZone(_EnemyPosition[index]);
-		spatialGrid[BucketIndex].Push(index);
+		//index = _aliveEnemies[i];
+		int BucketIndex = CalculateHitZone(_EnemyPosition[i]);
+		spatialGrid[BucketIndex].Push(i);
 	}
 }
 
@@ -227,27 +218,53 @@ void ASwarmManager::CleanupTickFrame()
 {
 	FVector* playerPos = CombatRadio->GetPlayerPosition();
 	const float AttackRangeSqrt = 10000.0f;
-	int size = _aliveEnemies.Num();
-	int Enemy = 0;
-	for (int i = 0; i < size;)
+	//int size = _aliveEnemies.Num();
+	//int Enemy = 0;
+	for (int i = 0; i < _aliveEnemiesCount; i++)
 	{
-		Enemy = _aliveEnemies[i];
-		if (_health[Enemy] == 0)
+		bool _healthZero = _health[i] <= 0;
+		bool _inAttackRange = FVector::DistSquared(_EnemyPosition[i], *playerPos) < AttackRangeSqrt;
+		bool isAttacking = !_healthZero && _inAttackRange;
+
+		_cleanupFlags[i] = _healthZero + (isAttacking * 2);
+	}
+	for (int i = _aliveEnemiesCount - 1; i >= 0; i--)
+	{
+		//Enemy = _aliveEnemies[i];
+		if (_cleanupFlags[i] == 1)
 		{
-			KillEnemy(Enemy, i);
-			size = _aliveEnemies.Num();
+			KillEnemy(i);
+			//size = _aliveEnemies.Num();
 		}
-		else if (FVector::DistSquared(_EnemyPosition[Enemy], *playerPos) < AttackRangeSqrt)
+		else if (_cleanupFlags[i] == 2)
 		{
-			CombatRadio->OnPlayerHit.Broadcast(_damage[Enemy]);
-			KillEnemy(Enemy, i);
-			size = _aliveEnemies.Num();
-		}
-		else
-		{
-			i++;
+			CombatRadio->OnPlayerHit.Broadcast(_damage[i]);
+			KillEnemy(i);
+			//size = _aliveEnemies.Num();
 		}
 	}
+}
+//TArray<FTransform> _InstanceTransforms;
+//TArray<int> _deadEnemies;
+//TArray<int> _aliveEnemies;
+//TArray<FVector> _EnemyDirection;
+//TArray<FVector> _EnemyPosition;
+//TArray<FVector> _EnemyVelocity;
+//TArray<FVector> _EnemyScale;
+//TArray<int> _EnemyBucketIndex;
+//TArray<float> _speed;
+//TArray<float> _damage;
+//TArray<float> _health;
+void ASwarmManager::SwapSOA(int indexA, int indexB)
+{
+	_InstanceTransforms[indexA] = _InstanceTransforms[indexB];
+	_EnemyDirection[indexA] = _EnemyDirection[indexB];
+	_EnemyPosition[indexA] = _EnemyPosition[indexB];
+	_EnemyVelocity[indexA] = _EnemyVelocity[indexB];
+	_EnemyScale[indexA] = _EnemyScale[indexB];
+	_speed[indexA] = _speed[indexB];
+	_damage[indexA] = _damage[indexB];
+	_health[indexA] = _health[indexB];
 }
 
 FVector ASwarmManager::SetSpawnLocation()
@@ -267,16 +284,16 @@ int ASwarmManager::GetClosestEnemyIndex(const FVector& Location)
 	int closestEnemyIndex = CheckClosestGrid(Location);
 	if (closestEnemyIndex != -1) { return closestEnemyIndex; }
 	int minDistance = INT_MAX;
-	int index = 0;
-	int size = _aliveEnemies.Num();
-	for (int i = 0; i < size; i++)
+	//int index = 0;
+	//int size = _aliveEnemies.Num();
+	for (int i = 0; i < _aliveEnemiesCount; i++)
 	{
-		index = _aliveEnemies[i];
-		int distance = FVector::DistSquared(_EnemyPosition[index], Location);
+		//index = _aliveEnemies[i];
+		int distance = FVector::DistSquared(_EnemyPosition[i], Location);
 		if (distance < minDistance)
 		{
 			minDistance = distance;
-			closestEnemyIndex = index;
+			closestEnemyIndex = i;
 		}
 	}
 	return closestEnemyIndex;

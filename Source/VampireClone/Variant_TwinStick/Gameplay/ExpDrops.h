@@ -26,15 +26,18 @@ public:
 private:
 	class UCombatMessageSubsystem* _CombatRadio = nullptr;
 
-	TArray<int> _deadExp;
+	//TArray<int> _deadExp;
 	static const int _expCount = 100;
-	FVector _ExpDirection[_expCount];
-	FVector _ExpPosition[_expCount];
-	FVector _ExpVelocity[_expCount];
+	TArray<FTransform> _InstanceTransforms;
 
-	float _timeLeft[_expCount];
-	float _currentSpeed[_expCount];
-	bool _alive[_expCount];
+	TArray<FVector> _ExpDirection;
+	TArray<FVector> _ExpPosition;
+	TArray<FVector> _ExpVelocity;
+
+	TArray<float> _timeLeft;
+	TArray<float> _currentSpeed;
+	//TArray<bool> _alive;
+	int _aliveEXPCount = 0;
 
 	float _maxSpeed = 1000.0f;
 	float _expValue = 1;
@@ -49,6 +52,8 @@ protected:
 	void MoveExp(float DeltaTime);
 	void KillExp(const int Exp);
 	void DrawExpMesh();
+	void SwapSOA(int indexA, int indexB);
+	void CleanupExp();
 
 public:	
 	// Called every frame
