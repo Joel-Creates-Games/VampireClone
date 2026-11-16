@@ -146,7 +146,7 @@ void ASwarmManager::Tick(float DeltaTime)
 	CleanupTickFrame();
 	DrawEnemyMesh();
 	_spawnTimer += DeltaTime;
-	_spawnSpeedUpTimer += DeltaTime;
+	/*_spawnSpeedUpTimer += DeltaTime;
 	if (_spawnTimer >= SpawnTime) {
 		for (int i = 0; i < _SpawnCount; i++)
 		{
@@ -158,6 +158,15 @@ void ASwarmManager::Tick(float DeltaTime)
 	if (_spawnSpeedUpTimer >= SpawnSpeedup) {
 		SpawnTime = FMath::Max(0.01f, SpawnTime - 0.1f);
 		_spawnSpeedUpTimer = 0;
+	}*/
+	if (SpawnCurve && _spawnTimer >= SpawnTime)
+	{
+		float currentTime = GetWorld()->GetTimeSeconds()*60.0f;
+		for (int i = 0; i < SpawnCurve->GetFloatValue(currentTime); i++)
+		{
+			SpawnEnemy(SetSpawnLocation());
+		}
+		_spawnTimer = 0.0f;
 	}
 	double endTime = FPlatformTime::Seconds();
 	if (endTime - startTime > 0.16) {
@@ -171,8 +180,15 @@ void ASwarmManager::SpawnEnemy(const FVector& SpawnLocation)
 	int nextDeadEnemy = GetNextDeadEnemy();
 	if (nextDeadEnemy == -1) { return; }
 	_health[nextDeadEnemy] = BaseHealth;
-	//_aliveEnemies.Push(nextDeadEnemy);
 	_EnemyPosition[nextDeadEnemy] = SpawnLocation;
+}
+
+void ASwarmManager::SpawnEnemies(const int Count)
+{
+	for (int i = 0; i < Count; i++)
+	{
+		SpawnEnemy(SetSpawnLocation());
+	}
 }
 
 int ASwarmManager::CalculateHitZone(const FVector& Location)
@@ -218,8 +234,6 @@ void ASwarmManager::CleanupTickFrame()
 {
 	FVector* playerPos = CombatRadio->GetPlayerPosition();
 	const float AttackRangeSqrt = 10000.0f;
-	//int size = _aliveEnemies.Num();
-	//int Enemy = 0;
 	for (int i = 0; i < _aliveEnemiesCount; i++)
 	{
 		bool _healthZero = _health[i] <= 0;
@@ -230,31 +244,18 @@ void ASwarmManager::CleanupTickFrame()
 	}
 	for (int i = _aliveEnemiesCount - 1; i >= 0; i--)
 	{
-		//Enemy = _aliveEnemies[i];
 		if (_cleanupFlags[i] == 1)
 		{
 			KillEnemy(i);
-			//size = _aliveEnemies.Num();
 		}
 		else if (_cleanupFlags[i] == 2)
 		{
 			CombatRadio->OnPlayerHit.Broadcast(_damage[i]);
 			KillEnemy(i);
-			//size = _aliveEnemies.Num();
 		}
 	}
 }
-//TArray<FTransform> _InstanceTransforms;
-//TArray<int> _deadEnemies;
-//TArray<int> _aliveEnemies;
-//TArray<FVector> _EnemyDirection;
-//TArray<FVector> _EnemyPosition;
-//TArray<FVector> _EnemyVelocity;
-//TArray<FVector> _EnemyScale;
-//TArray<int> _EnemyBucketIndex;
-//TArray<float> _speed;
-//TArray<float> _damage;
-//TArray<float> _health;
+
 void ASwarmManager::SwapSOA(int indexA, int indexB)
 {
 	_InstanceTransforms[indexA] = _InstanceTransforms[indexB];
@@ -284,11 +285,8 @@ int ASwarmManager::GetClosestEnemyIndex(const FVector& Location)
 	int closestEnemyIndex = CheckClosestGrid(Location);
 	if (closestEnemyIndex != -1) { return closestEnemyIndex; }
 	int minDistance = INT_MAX;
-	//int index = 0;
-	//int size = _aliveEnemies.Num();
 	for (int i = 0; i < _aliveEnemiesCount; i++)
 	{
-		//index = _aliveEnemies[i];
 		int distance = FVector::DistSquared(_EnemyPosition[i], Location);
 		if (distance < minDistance)
 		{

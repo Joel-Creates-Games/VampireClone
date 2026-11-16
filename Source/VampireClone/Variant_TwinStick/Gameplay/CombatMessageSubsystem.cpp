@@ -45,6 +45,12 @@ void UCombatMessageSubsystem::SwarmTakeAOEDamage(const FVector& center, float ra
 	_swarm->TakeAOEDamage(center, radiusX, radiusY, damage);
 }
 
+void UCombatMessageSubsystem::SwarmSpawnEnemies(int count)
+{
+	if (_swarm == nullptr) { return; }
+	_swarm->SpawnEnemies(count);
+}
+
 FVector* UCombatMessageSubsystem::GetPlayerPosition()
 {
 	if (_player == nullptr) { return nullptr; }

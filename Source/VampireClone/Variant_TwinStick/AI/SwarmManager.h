@@ -33,14 +33,16 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Enemy Settings")
 	float SpawnTime = 2.0f;
 
-	float SpawnSpeedup = 2.0f;
+	UPROPERTY(EditAnywhere, Category = "Enemy Settings")
+	float SpawnSpeedup = 5.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Enemy Settings")
+	class UCurveFloat* SpawnCurve = nullptr;
+
 
 private:
 	class UProgressionMessageSubsystem* ProgressRadio = nullptr;
 	class UCombatMessageSubsystem* CombatRadio = nullptr;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UInstancedStaticMeshComponent* ISMComponent;
 
 	TArray<uint8> _cleanupFlags;
 
@@ -64,7 +66,7 @@ private:
 	float _spawnTimer = 0.0f;
 	float _spawnSpeedUpTimer = 0.0f;
 
-	int _SpawnCount = 20;
+	int _SpawnCount = 3;
 
 
 protected:
@@ -91,6 +93,7 @@ public:
 	void TakeDamage(const int Index, const float Damage);
 	void TakeAOEDamage(const FVector& center, float radiusX, float radiusY, float damage);
 	void SpawnEnemy(const FVector& SpawnLocation);
+	void SpawnEnemies(const int Count);
 
 /// <summary>
 /// Collision logic for spatial hashing, we will check for collisions between enemies and the player or attacks

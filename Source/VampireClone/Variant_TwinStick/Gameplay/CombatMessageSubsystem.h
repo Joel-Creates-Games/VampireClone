@@ -26,6 +26,7 @@ public:
 	int GetClosestSwarm(FVector location);
 	void SwarmTakeDamage(int index, float damage);
 	void SwarmTakeAOEDamage(const FVector& center, float radiusX, float radiusY, float damage);
+	void SwarmSpawnEnemies(int count);
 	FVector* GetPlayerPosition();
 private:
 	ASwarmManager* _swarm = nullptr;
