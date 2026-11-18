@@ -71,6 +71,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Stats")
 	float _Area = 1.0f;
 
+	int _multiAttackMax = 1;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

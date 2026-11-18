@@ -16,7 +16,6 @@ AMagicWandController::AMagicWandController()
 void AMagicWandController::Setup()
 {
 	Super::Setup();
-	_isEquipped = true;
 }
 
 bool AMagicWandController::Upgrade(UUpgradeDefinition* upgrade)
@@ -26,6 +25,7 @@ bool AMagicWandController::Upgrade(UUpgradeDefinition* upgrade)
 	_baseSpeedModifier *= upgrade->SpeedMultiplier;
 	_baseDamageModifier *= upgrade->DamageMultiplier;
 	_AttackSpeed = FMath::Max(0.3f, _AttackSpeed - upgrade->AttackSpeedChange);
+	_multiAttackMax += upgrade->AddAttacks;
 	return false;
 }
 
@@ -45,7 +45,7 @@ void AMagicWandController::MoveProjectiles(float DeltaTime)
 void AMagicWandController::Behaviour(float DeltaTime)
 {
 	Super::Behaviour(DeltaTime);
-	if (_CurrentSpeed > _AttackSpeed) {
+	if (_CurrentSpeed > _AttackSpeed / _multiAttackMax) {
 		FVector* playPos = _CombatRadio->GetPlayerPosition();
 		if (!playPos) { return; }
 		_CurrentSpeed = 0;

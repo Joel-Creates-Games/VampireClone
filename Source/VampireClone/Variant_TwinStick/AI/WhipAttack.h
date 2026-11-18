@@ -33,7 +33,6 @@ private:
 	float _multiAttackDelay = 0.5f;
 	float _currentMultiAttackSpeed = 0.0f;
 	bool _multiAttacking = false;
-	int _multiAttackMax = 1;
 	int _currentMultiAttack = 0;
 
 	float _hitDistanceSquaredY = 0.0f;
