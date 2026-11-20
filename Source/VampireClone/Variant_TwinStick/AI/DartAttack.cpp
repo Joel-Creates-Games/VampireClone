@@ -17,7 +17,6 @@ void ADartAttack::Setup()
 	_AttackSpeed = 5.0f;
 	Super::Setup();
 	_hitList.Init(TArray<int>(), _projectileCount);
-	_isEquipped = true;
 }
 
 void ADartAttack::MoveProjectiles(float DeltaTime)

@@ -21,10 +21,19 @@ protected:
 	virtual void Setup() override;
 	virtual void Behaviour(float DeltaTime) override;
 
-	void CalculateOrbitPositions();
+	void CalculateOrbitPositions(float DeltaTime);
+	void SetupProjectile();
+	void StopSpinningProjectiles();
+	virtual void CheckEnemyCollision() override;
+	virtual void DrawProjectileMesh() override;
+
+public:
+	virtual bool Upgrade(UUpgradeDefinition* upgrade) override;
 
 protected:
+
 	float _RadiusFromPlayer = 300.0f;
+	float _spinSpeed = 1.0f;
 	float _currentSpinTime = 0.0f;
 	float _spinTime = 5.0f;
 	bool _isSpinning = false;
