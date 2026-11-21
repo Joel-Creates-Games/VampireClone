@@ -31,19 +31,19 @@ void AWeaponController::Setup()
 		ProgressRadio->OnUpgradeSelected.AddDynamic(this, &AWeaponController::UpgradeDelegate);
 	}
 
-	_deadProjectiles.Reserve(_projectileCount);
+	_InstanceTransforms.Reserve(_projectileCount);
+	//_deadProjectiles.Reserve(_projectileCount);
 	_ProjectileDirection.Reserve(_projectileCount);
 	_ProjectilePosition.Reserve(_projectileCount);
 	_ProjectileVelocity.Reserve(_projectileCount);
 
 	_timeLeft.Reserve(_projectileCount);
-	_alive.Reserve(_projectileCount);
+	//_alive.Reserve(_projectileCount);
 
 	FTransform HiddenTransform;
 	HiddenTransform.SetLocation(FVector(0, 0, -999999.0f));
 
-	TArray<FTransform> InstanceTransforms;
-	InstanceTransforms.Init(HiddenTransform, _projectileCount);
+	_InstanceTransforms.Init(HiddenTransform, _projectileCount);
 
 	for (int i = 0; i < _projectileCount; i++)
 	{
@@ -52,11 +52,11 @@ void AWeaponController::Setup()
 		_ProjectileVelocity.Push(FVector(0, 0, 0));
 
 		_timeLeft.Push(0.0f);
-		_alive.Push(false);
+		//_alive.Push(false);
 
-		_deadProjectiles.Push(i);
+		//_deadProjectiles.Push(i);
 	}
-	ISMComponent->AddInstances(InstanceTransforms, false);
+	ISMComponent->AddInstances(_InstanceTransforms, false);
 
 	//if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Yellow, FString::Printf(TEXT("Actual Spawns: %d"), ISMComponent->GetInstanceCount()));
 }
@@ -68,29 +68,19 @@ void AWeaponController::MoveProjectiles(float DeltaTime)
 
 void AWeaponController::DrawProjectileMesh()
 {
-	for (int i = 0; i < _projectileCount; i++)
+	for (int i = 0; i < _activeCount; i++)
 	{
-		FTransform ProjectileTransform;
-		if (_alive[i]) {
-			ProjectileTransform.SetLocation(_ProjectilePosition[i]);
-			ProjectileTransform.SetScale3D(FVector(_scaleX, _scaleY, _scaleZ));
-		}
-		else
-		{
-			ProjectileTransform.SetLocation(FVector(0, 0, -999999.0f));
-		}
-		ISMComponent->UpdateInstanceTransform(i, ProjectileTransform, true, false, false);
-		//if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("Actual Spawns: %d"), ISMComponent->GetInstanceCount()));
+		_InstanceTransforms[i].SetLocation(_ProjectilePosition[i]);
+		_InstanceTransforms[i].SetScale3D(FVector(_scaleX, _scaleY, _scaleZ));
 	}
-	ISMComponent->MarkRenderStateDirty();
-	ISMComponent->UpdateBounds();
+	ISMComponent->BatchUpdateInstancesTransforms(0, _InstanceTransforms, true, false, true);
 }
 
 int AWeaponController::SpawnProjectile(FVector Location, FVector Direction)
 {
 	int nextDeadProjectile = GetNextProjectile();
 	if (nextDeadProjectile == -1) { return nextDeadProjectile; }
-	_alive[nextDeadProjectile] = true;
+	//_alive[nextDeadProjectile] = true;
 	_ProjectilePosition[nextDeadProjectile] = Location;
 	_ProjectileDirection[nextDeadProjectile] = Direction.GetSafeNormal();
 	_ProjectileVelocity[nextDeadProjectile] = _ProjectileDirection[nextDeadProjectile] * baseMoveSpeed * _baseSpeedModifier;
@@ -113,6 +103,17 @@ void AWeaponController::Behaviour(float DeltaTime)
 	_CurrentSpeed += DeltaTime;
 }
 
+void AWeaponController::SwapSOA(int posA, int posB)
+{
+	_InstanceTransforms[posA] = _InstanceTransforms[posB];
+
+	_ProjectileDirection[posA] = _ProjectileDirection[posB];
+	_ProjectilePosition[posA] = _ProjectilePosition[posB];
+	_ProjectileVelocity[posA] = _ProjectileVelocity[posB];
+
+	_timeLeft[posA] = _timeLeft[posB];
+}
+
 void AWeaponController::UpgradeDelegate(UUpgradeDefinition* upgrade)
 {
 	Upgrade(upgrade);
@@ -120,15 +121,18 @@ void AWeaponController::UpgradeDelegate(UUpgradeDefinition* upgrade)
 
 void AWeaponController::KillProjectile(const int Projectile)
 {
-	_alive[Projectile] = false;
-	_deadProjectiles.Push(Projectile);
+	SwapSOA(Projectile, _activeCount-1);
+	_InstanceTransforms[_activeCount - 1].SetLocation(FVector(0, 0, -999999.0f));
+	_activeCount--;
+	//_alive[Projectile] = false;
+	//_deadProjectiles.Push(Projectile);
 }
 
 void AWeaponController::CheckEnemyCollision()
 {
-	for (int i = 0; i < _projectileCount; i++)
+	for (int i = 0; i < _activeCount; i++)
 	{
-		if (!_alive[i]) { continue; }
+		//if (!_alive[i]) { continue; }
 		int closestEnemyIndex = _CombatRadio->GetClosestSwarm(_ProjectilePosition[i]);
 		if (closestEnemyIndex == -1) { continue; }
 		FVector* enemyPos = _CombatRadio->GetSwarmEnemyPosition(closestEnemyIndex);
@@ -167,8 +171,9 @@ void AWeaponController::Tick(float DeltaTime)
 
 int AWeaponController::GetNextProjectile()
 {
-	if (_deadProjectiles.Num() == 0) { return -1; }
-	int nextDeadProjectile = _deadProjectiles.Pop();
-	return nextDeadProjectile;
+	if (_activeCount == _projectileCount) { return -1; }
+	//int nextDeadProjectile = _deadProjectiles.Pop();
+	_activeCount++;
+	return _activeCount-1;
 }
 

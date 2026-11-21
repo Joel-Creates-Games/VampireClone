@@ -17,14 +17,16 @@ void ADartAttack::Setup()
 	_AttackSpeed = 5.0f;
 	Super::Setup();
 	_hitList.Init(TArray<int>(), _projectileCount);
+	//_isEquipped = true;
 }
 
 void ADartAttack::MoveProjectiles(float DeltaTime)
 {
 	Super::MoveProjectiles(DeltaTime);
-	for (size_t i = 0; i < _projectileCount; i++)
+	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("active: %d"), _activeCount));
+	for (size_t i = 0; i < _activeCount; i++)
 	{
-		if (!_alive[i]) { continue; }
+		//if (!_alive[i]) { continue; }
 		_ProjectilePosition[i] += _ProjectileVelocity[i] * DeltaTime;
 		_timeLeft[i] += DeltaTime;
 		if (_timeLeft[i] > Lifetime)
@@ -36,9 +38,9 @@ void ADartAttack::MoveProjectiles(float DeltaTime)
 
 void ADartAttack::CheckEnemyCollision()
 {
-	for (int i = 0; i < _projectileCount; i++)
+	for (int i = 0; i < _activeCount; i++)
 	{
-		if (!_alive[i]) { continue; }
+		//if (!_alive[i]) { continue; }
 		int closestEnemyIndex = _CombatRadio->GetClosestSwarm(_ProjectilePosition[i]);
 		if (closestEnemyIndex == -1) { continue; }
 		if (_hitList[i].Contains(closestEnemyIndex)) { continue; }
@@ -85,6 +87,12 @@ int ADartAttack::SpawnProjectile(FVector Location, FVector Direction)
 	_hitList[nextDeadProjectile].Empty();
 	_hitList[nextDeadProjectile].Reserve(_pierceCount);
 	return nextDeadProjectile;
+}
+
+void ADartAttack::SwapSOA(int posA, int posB)
+{
+	Super::SwapSOA(posA, posB);
+	_hitList[posA] = _hitList[posB];
 }
 
 bool ADartAttack::Upgrade(UUpgradeDefinition* upgrade)

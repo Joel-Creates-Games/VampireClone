@@ -24,6 +24,8 @@ protected:
 	virtual int SpawnProjectile(FVector Location, FVector Direction) override;
 	virtual void CheckEnemyCollision() override;
 
+	virtual void SwapSOA(int posA, int posB) override;
+
 	UFUNCTION()
 	void SetGoingRight(bool isRight);
 public:

@@ -15,7 +15,7 @@ void ABibleAttack::Setup()
 	_projectileCount = 20;
 	_baseSpeedModifier = 1.5f;
 	Super::Setup();
-	_isEquipped = true;
+	//_isEquipped = true;
 }
 
 void ABibleAttack::Behaviour(float DeltaTime)
@@ -47,9 +47,9 @@ void ABibleAttack::CalculateOrbitPositions(float DeltaTime)
 	float CosChange = FMath::Cos(_spinSpeed * DeltaTime);
 
 	FVector* playerPos = _CombatRadio->GetPlayerPosition();
-	for (size_t i = 0; i < _projectileCount; i++)
+	for (size_t i = 0; i < _activeCount; i++)
 	{
-		if (!_alive[i]) { continue; }
+		//if (!_alive[i]) { continue; }
 		float oldX = _ProjectilePosition[i].X;
 		float oldY = _ProjectilePosition[i].Y;
 		float newX = (oldX * CosChange) - (oldY * SinChange);
@@ -74,9 +74,9 @@ void ABibleAttack::SetupProjectile()
 
 void ABibleAttack::StopSpinningProjectiles()
 {
-	for (size_t i = 0; i < _projectileCount; i++)
+	for (size_t i = 0; i < _activeCount; i++)
 	{
-		if (!_alive[i]) { continue; }
+		//if (!_alive[i]) { continue; }
 		KillProjectile(i);
 	}
 }
@@ -84,10 +84,10 @@ void ABibleAttack::StopSpinningProjectiles()
 void ABibleAttack::CheckEnemyCollision()
 {
 	FVector* playerPos = _CombatRadio->GetPlayerPosition();
-	for (int i = 0; i < _projectileCount; i++)
+	for (int i = 0; i < _activeCount; i++)
 	{
-		if (!_alive[i]) { continue; }
-		if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, (_ProjectilePosition[i] + *playerPos).ToString());
+		//if (!_alive[i]) { continue; }
+		if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("active: %d"), _activeCount));
 		int closestEnemyIndex = _CombatRadio->GetClosestSwarm(_ProjectilePosition[i] + *playerPos);
 		if (closestEnemyIndex == -1) { continue; }
 		FVector* enemyPos = _CombatRadio->GetSwarmEnemyPosition(closestEnemyIndex);
@@ -103,29 +103,18 @@ void ABibleAttack::CheckEnemyCollision()
 void ABibleAttack::DrawProjectileMesh()
 {
 	FVector* playerPos = _CombatRadio->GetPlayerPosition();
-	for (int i = 0; i < _projectileCount; i++)
+	for (int i = 0; i < _activeCount; i++)
 	{
-		FTransform ProjectileTransform;
-		if (_alive[i]) {
-			ProjectileTransform.SetLocation(_ProjectilePosition[i] + *playerPos);
-			ProjectileTransform.SetScale3D(FVector(_scaleX, _scaleY, _scaleZ));
-		}
-		else
-		{
-			ProjectileTransform.SetLocation(FVector(0, 0, -999999.0f));
-		}
-		ISMComponent->UpdateInstanceTransform(i, ProjectileTransform, true, false, false);
-		//if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("Actual Spawns: %d"), ISMComponent->GetInstanceCount()));
+		_InstanceTransforms[i].SetLocation(_ProjectilePosition[i] + *playerPos);
 	}
-	ISMComponent->MarkRenderStateDirty();
-	ISMComponent->UpdateBounds();
+	ISMComponent->BatchUpdateInstancesTransforms(0, _InstanceTransforms, true, false, true);
 }
 
 bool ABibleAttack::Upgrade(UUpgradeDefinition* upgrade)
 {
 	if (!upgrade->weaponTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Weapons.Bible")))) { return false; }
 	if (!Super::Upgrade(upgrade)) { return false; }
-	_multiAttackMax += upgrade->AddAttacks;
+	_multiAttackMax = FMath::Min(_multiAttackMax + upgrade->AddAttacks, _projectileCount);
 	_AttackSpeed = FMath::Max(0.3f, _AttackSpeed - upgrade->AttackSpeedChange);
 	_baseDamageModifier *= upgrade->DamageMultiplier;
 	_spinSpeed += upgrade->SpeedMultiplier;

@@ -25,6 +25,8 @@ protected:
 	virtual void Behaviour(float DeltaTime) override;
 	virtual int SpawnProjectile(FVector Location, FVector Direction) override;
 
+	virtual void SwapSOA(int posA, int posB) override;
+
 protected:
 	TArray<TArray<int>> _hitList;
 

@@ -31,9 +31,9 @@ bool AMagicWandController::Upgrade(UUpgradeDefinition* upgrade)
 
 void AMagicWandController::MoveProjectiles(float DeltaTime)
 {
-	for (int i = 0; i < _projectileCount; i++)
+	for (int i = 0; i < _activeCount; i++)
 	{
-		if (!_alive[i]) { continue; }
+		//if (!_alive[i]) { continue; }
 		_ProjectilePosition[i] += _ProjectileVelocity[i] * DeltaTime;
 		_timeLeft[i] += DeltaTime;
 		if (_timeLeft[i] >= Lifetime) {

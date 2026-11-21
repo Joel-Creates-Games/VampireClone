@@ -40,6 +40,8 @@ protected:
 	virtual void CheckEnemyCollision();
 	virtual void Behaviour(float DeltaTime);
 
+	virtual void SwapSOA(int posA, int posB);
+
 	UFUNCTION()
 	virtual void UpgradeDelegate(UUpgradeDefinition* upgrade);
 
@@ -48,13 +50,15 @@ protected:
 
 	class UCombatMessageSubsystem* _CombatRadio = nullptr;
 
-	TArray<int> _deadProjectiles;
+	TArray<FTransform> _InstanceTransforms;
+	//TArray<int> _deadProjectiles;
 	TArray<FVector> _ProjectileDirection;
 	TArray<FVector> _ProjectilePosition;
 	TArray<FVector> _ProjectileVelocity;
 
 	TArray<float> _timeLeft;
-	TArray<bool> _alive;
+	//TArray<bool> _alive;
+	int _activeCount = 0;
 
 	UPROPERTY(EditAnywhere, Category = "Stats")
 	float _scaleX = 1; float _scaleY = 1; float _scaleZ = 1;

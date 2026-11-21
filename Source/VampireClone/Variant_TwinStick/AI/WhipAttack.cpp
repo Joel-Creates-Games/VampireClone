@@ -17,7 +17,7 @@ void AWhipAttack::Setup()
 	_scaleY = 6.0f;
 	_scaleZ = 1.0f;
 	Lifetime = 0.1f;
-	//_isEquipped = true;
+	_isEquipped = true;
 	Super::Setup();
 
 	if (_CombatRadio)
@@ -65,9 +65,9 @@ void AWhipAttack::Behaviour(float DeltaTime)
 void AWhipAttack::MoveProjectiles(float DeltaTime)
 {
 	FVector* playerPos = _CombatRadio->GetPlayerPosition();
-	for (int i = 0; i < _projectileCount; i++)
+	for (int i = 0; i < _activeCount; i++)
 	{
-		if (!_alive[i]) { continue; }
+		//if (!_alive[i]) { continue; }
 		_ProjectilePosition[i] = FVector(playerPos->X + _ProjectilePlayerOffset[i].X, playerPos->Y + _ProjectilePlayerOffset[i].Y, playerPos->Z + _ProjectilePlayerOffset[i].Z);
 		_timeLeft[i] += DeltaTime;
 		if (_timeLeft[i] >= Lifetime) {
@@ -99,11 +99,17 @@ void AWhipAttack::SetGoingRight(bool isRight)
 
 void AWhipAttack::CheckEnemyCollision()
 {
-	for (int i = 0; i < _projectileCount; i++)
+	for (int i = 0; i < _activeCount; i++)
 	{
-		if (!_alive[i]) { continue; }
+		//if (!_alive[i]) { continue; }
 		_CombatRadio->SwarmTakeAOEDamage(_ProjectilePosition[i], _hitDistanceSquared, _hitDistanceSquaredY, baseDamage * _baseDamageModifier);
 	}
+}
+
+void AWhipAttack::SwapSOA(int posA, int posB)
+{
+	Super::SwapSOA(posA, posB);
+	_ProjectilePlayerOffset[posA] = _ProjectilePlayerOffset[posB];
 }
 
 bool AWhipAttack::Upgrade(UUpgradeDefinition* upgrade)

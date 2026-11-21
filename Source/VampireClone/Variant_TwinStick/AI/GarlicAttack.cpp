@@ -21,7 +21,7 @@ void  AGarlicAttack::Setup() {
 void AGarlicAttack::Behaviour(float DeltaTime) 
 {
 	Super::Behaviour(DeltaTime);
-	if (_deadProjectiles.Num())
+	if (_activeCount)
 	{
 		FVector* playerPos = _CombatRadio->GetPlayerPosition();
 		if (playerPos == nullptr) { return; }
@@ -37,9 +37,9 @@ void AGarlicAttack::Behaviour(float DeltaTime)
 
 void AGarlicAttack::MoveProjectiles(float DeltaTime)
 {
-	for (int i = 0; i < _projectileCount; i++)
+	for (int i = 0; i < _activeCount; i++)
 	{
-		if (!_alive[i]) { continue; }
+		//if (!_alive[i]) { continue; }
 		FVector* playerPos = _CombatRadio->GetPlayerPosition();
 		_ProjectilePosition[i] = *playerPos;
 	}
