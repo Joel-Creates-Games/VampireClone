@@ -39,23 +39,19 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Enemy Settings")
 	class UCurveFloat* SpawnCurve = nullptr;
 
-
-private:
+protected:
 	class UProgressionMessageSubsystem* ProgressRadio = nullptr;
 	class UCombatMessageSubsystem* CombatRadio = nullptr;
+
+private:
 
 	TArray<uint8> _cleanupFlags;
 
 	TArray<FTransform> _InstanceTransforms;
-	TArray<FVector> _EnemyDirection;
-	TArray<FVector> _EnemyPosition;
-	TArray<FVector> _EnemyVelocity;
 	TArray<FVector> _EnemyScale;
-	TArray<float> _speed;
 	TArray<float> _damage;
 	TArray<float> _health;
 
-	int _aliveEnemiesCount = 0;
 	int _enemyCount = 10000;
 
 	/// <summary>
@@ -75,12 +71,21 @@ protected:
 	void Setup();
 
 	//in the tick function, we will control the enemies, moving them towards the player and checking for collisions
-	void ControlEnemy(float DeltaTime);
+	virtual void ControlEnemy(float DeltaTime);
 	void DrawEnemyMesh();
 
 	int GetNextDeadEnemy();
 	
 	void KillEnemy(const int Index);
+
+protected:
+	TArray<FVector> _EnemyPosition;
+	TArray<FVector> _EnemyDirection;
+	TArray<FVector> _EnemyVelocity;
+
+	TArray<float> _speed;
+
+	int _aliveEnemiesCount = 0;
 
 public:	
 	// Called every frame

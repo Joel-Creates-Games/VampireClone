@@ -17,7 +17,7 @@ void AWhipAttack::Setup()
 	_scaleY = 6.0f;
 	_scaleZ = 1.0f;
 	Lifetime = 0.1f;
-	_isEquipped = true;
+	//_isEquipped = true;
 	Super::Setup();
 
 	if (_CombatRadio)

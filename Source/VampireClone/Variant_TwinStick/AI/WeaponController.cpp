@@ -121,6 +121,8 @@ void AWeaponController::UpgradeDelegate(UUpgradeDefinition* upgrade)
 
 void AWeaponController::KillProjectile(const int Projectile)
 {
+	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("Actual Spawns: %d"), Projectile));
+	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::Printf(TEXT("Actual Spawns: %d"), _activeCount - 1));
 	SwapSOA(Projectile, _activeCount-1);
 	_InstanceTransforms[_activeCount - 1].SetLocation(FVector(0, 0, -999999.0f));
 	_activeCount--;

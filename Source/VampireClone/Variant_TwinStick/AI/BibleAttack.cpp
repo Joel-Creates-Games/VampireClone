@@ -15,7 +15,7 @@ void ABibleAttack::Setup()
 	_projectileCount = 20;
 	_baseSpeedModifier = 1.5f;
 	Super::Setup();
-	//_isEquipped = true;
+	_isEquipped = true;
 }
 
 void ABibleAttack::Behaviour(float DeltaTime)
@@ -28,7 +28,7 @@ void ABibleAttack::Behaviour(float DeltaTime)
 			_isSpinning = false;
 			_currentSpinTime = 0;
 			StopSpinningProjectiles();
-			if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("stop"));
+			//if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("stop"));
 		}
 		return;
 	}
@@ -74,9 +74,8 @@ void ABibleAttack::SetupProjectile()
 
 void ABibleAttack::StopSpinningProjectiles()
 {
-	for (size_t i = 0; i < _activeCount; i++)
+	for (int i = _activeCount - 1; i >= 0; i--)
 	{
-		//if (!_alive[i]) { continue; }
 		KillProjectile(i);
 	}
 }

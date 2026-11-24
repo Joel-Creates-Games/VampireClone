@@ -16,12 +16,13 @@ void  AGarlicAttack::Setup() {
 	_scaleY = 4.0f;
 	_scaleZ = 1.0f;
 	Super::Setup();
+	//_isEquipped = true;
 }
 
 void AGarlicAttack::Behaviour(float DeltaTime) 
 {
 	Super::Behaviour(DeltaTime);
-	if (_activeCount)
+	if (!_activeCount)
 	{
 		FVector* playerPos = _CombatRadio->GetPlayerPosition();
 		if (playerPos == nullptr) { return; }
