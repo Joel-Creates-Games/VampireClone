@@ -8,16 +8,17 @@
 void AWavySwarmManager::ControlEnemy(float DeltaTime)
 {
 	FVector* playerPos = CombatRadio->GetPlayerPosition();
-	const float AttackRangeSqrt = 10000.0f;
-	//int index = 0;
-	//int size = _aliveEnemies.Num();
+	float time = GetWorld()->GetTimeSeconds();
+	float SinChange = FMath::Sin(time) * waveHeight;
 	for (int i = 0; i < _aliveEnemiesCount; i++)
 	{
-		//index = _aliveEnemies[i];
 		FVector EnemyDirection = *playerPos - _EnemyPosition[i];
+
 		EnemyDirection.Normalize();
+		FVector RightDir = FVector::CrossProduct(FVector::UpVector, EnemyDirection).GetSafeNormal();
+		FVector StrafeDirection = RightDir * SinChange;
 		_EnemyDirection[i] = EnemyDirection;
 		_EnemyVelocity[i] = EnemyDirection * _speed[i];
-		_EnemyPosition[i] += _EnemyVelocity[i] * DeltaTime;
+		_EnemyPosition[i] += (_EnemyVelocity[i] + StrafeDirection) * DeltaTime;
 	}
 }

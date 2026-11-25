@@ -8,12 +8,9 @@
 void ALinearSwarmManager::ControlEnemy(float DeltaTime)
 {
 	FVector* playerPos = CombatRadio->GetPlayerPosition();
-	const float AttackRangeSqrt = 10000.0f;
-	//int index = 0;
-	//int size = _aliveEnemies.Num();
+
 	for (int i = 0; i < _aliveEnemiesCount; i++)
 	{
-		//index = _aliveEnemies[i];
 		FVector EnemyDirection = *playerPos - _EnemyPosition[i];
 		EnemyDirection.Normalize();
 		_EnemyDirection[i] = EnemyDirection;

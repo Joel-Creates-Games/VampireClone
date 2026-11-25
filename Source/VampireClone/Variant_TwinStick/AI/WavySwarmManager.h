@@ -15,4 +15,7 @@ class AWavySwarmManager : public ASwarmManager
 	GENERATED_BODY()
 
 	virtual void ControlEnemy(float DeltaTime) override;
+
+	UPROPERTY(EditAnywhere, Category = "Enemy Setting")
+	float waveHeight = 300.0f;
 };
