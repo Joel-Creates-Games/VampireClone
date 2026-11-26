@@ -4,10 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "GameplayTagContainer.h"
 #include "CombatMessageSubsystem.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerHitSigniture, float, DamageAmount);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerMoveRight, bool, IsRight);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemySpawnType, FGameplayTag, enemyTag);
 
 UCLASS()
 class UCombatMessageSubsystem : public UWorldSubsystem
@@ -17,6 +19,7 @@ class UCombatMessageSubsystem : public UWorldSubsystem
 public:
 	FOnPlayerHitSigniture OnPlayerHit;
 	FOnPlayerMoveRight OnPlayerMoveRight;
+	FOnEnemySpawnType OnEnemySpawnType;
 
 public:
 	FVector* GetSwarmEnemyPosition(int pos);

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
+#include "GameplayTagContainer.h"
 #include "SwarmManager.generated.h"
 
 UCLASS()
@@ -30,14 +31,17 @@ public:
 	int BaseDamage = 10;
 	UPROPERTY(EditAnywhere, Category = "Enemy Settings")
 	int BaseHealth = 10;
-	UPROPERTY(EditAnywhere, Category = "Enemy Settings")
+	/*UPROPERTY(EditAnywhere, Category = "Enemy Settings")
 	float SpawnTime = 2.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Enemy Settings")
-	float SpawnSpeedup = 5.0f;
+	float SpawnSpeedup = 5.0f;*/
 
 	UPROPERTY(EditAnywhere, Category = "Enemy Settings")
-	class UCurveFloat* SpawnCurve = nullptr;
+	FGameplayTag enemyTag;
+
+	/*UPROPERTY(EditAnywhere, Category = "Enemy Settings")
+	class UCurveFloat* SpawnCurve = nullptr;*/
 
 protected:
 	class UProgressionMessageSubsystem* ProgressRadio = nullptr;
@@ -99,6 +103,10 @@ public:
 	void TakeAOEDamage(const FVector& center, float radiusX, float radiusY, float damage);
 	void SpawnEnemy(const FVector& SpawnLocation);
 	void SpawnEnemies(const int Count);
+
+	UFUNCTION()
+	void SpawnEnemyListener(FGameplayTag spawnTag);
+
 
 /// <summary>
 /// Collision logic for spatial hashing, we will check for collisions between enemies and the player or attacks

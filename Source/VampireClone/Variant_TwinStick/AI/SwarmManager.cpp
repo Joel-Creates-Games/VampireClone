@@ -40,6 +40,7 @@ void ASwarmManager::Setup()
 	CombatRadio = GetWorld()->GetSubsystem<UCombatMessageSubsystem>();
 	if (CombatRadio) {
 		CombatRadio->SetSwarmManager(this);
+		CombatRadio->OnEnemySpawnType.AddDynamic(this, &ASwarmManager::SpawnEnemyListener);
 	}
 
 	FTransform HiddenTransform;
@@ -141,8 +142,8 @@ void ASwarmManager::Tick(float DeltaTime)
 	UpdateGrid();
 	CleanupTickFrame();
 	DrawEnemyMesh();
-	_spawnTimer += DeltaTime;
-	if (SpawnCurve && _spawnTimer >= SpawnTime)
+	//_spawnTimer += DeltaTime;
+	/*if (SpawnCurve && _spawnTimer >= SpawnTime)
 	{
 		float currentTime = GetWorld()->GetTimeSeconds()*60.0f;
 		for (int i = 0; i < SpawnCurve->GetFloatValue(currentTime); i++)
@@ -150,7 +151,7 @@ void ASwarmManager::Tick(float DeltaTime)
 			SpawnEnemy(SetSpawnLocation());
 		}
 		_spawnTimer = 0.0f;
-	}
+	}*/
 	double endTime = FPlatformTime::Seconds();
 	if (endTime - startTime > 0.16) {
 		UE_LOG(LogTemp, Error, TEXT("SPIKE CAUGHT: swarm Loop took %f ms"), (endTime - startTime) * 1000.0);
@@ -172,6 +173,12 @@ void ASwarmManager::SpawnEnemies(const int Count)
 	{
 		SpawnEnemy(SetSpawnLocation());
 	}
+}
+
+void ASwarmManager::SpawnEnemyListener(FGameplayTag spawnTag)
+{
+	if (spawnTag != enemyTag) { return; }
+	SpawnEnemy(SetSpawnLocation());
 }
 
 int ASwarmManager::CalculateHitZone(const FVector& Location)
